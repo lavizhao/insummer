@@ -2,6 +2,13 @@
 __pycache__/
 *.py[cod]
 
+*~
+
+conf/
+question_data/
+question/
+kb_data/
+
 # C extensions
 *.so
 
