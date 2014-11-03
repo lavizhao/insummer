@@ -3,7 +3,7 @@
 import sys
 sys.path.append("..")
 import insummer
-from insummer.query_expansion1.entity_finder import example_entity_finder
+from insummer.query_expansion.entity_finder import example_entity_finder
 from insummer.read_conf import config
 from insummer.common_type import Question
 

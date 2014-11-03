@@ -1,20 +1,20 @@
 #!/usr/bin/python3
 
+import sys
+sys.path.append("..")
+import insummer
 import unittest
-import insummer 
-from insummer.kbtool import get_entity_link
+from insummer.util import NLP
+
+
 
 class mytest(unittest.TestCase):
     def setUp(self):
         pass
         
-    def testEntityLink(self):
-        sentence = 'How to handle a 1.5 year old when hitting?'
-        result = get_entity_link(sentence)
-
-        print result
-
+    def test_norm_text(self):
+        nlp = NLP()
+        self.assertEqual(nlp.norm_text('dogs'),'dog','测试归一化句子')
     
-
 if __name__ == '__main__':
     unittest.main()

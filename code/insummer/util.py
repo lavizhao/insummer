@@ -9,6 +9,9 @@ import textblob
 from nltk.tag.stanford import NERTagger
 from nltk.tag.stanford import POSTagger
 from nltk.stem import WordNetLemmatizer
+from conceptnet5 import nodes
+
+ncc = nodes.normalized_concept_name
 
 #定义所有NLP的方法
 class NLP:
@@ -40,5 +43,6 @@ class NLP:
         tk = word_tokenize(sentence)
         return self.__SPOS.tag(tk)
 
-    def lemma(self,word):
-        return self.__wnl.lemmatize(word)
+    #将文本归一化,这个用的是conceptNet自带的归一化工具
+    def norm_text(self,word):
+        return ncc('en',word)
