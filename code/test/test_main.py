@@ -12,7 +12,10 @@ import insummer
 from insummer.query_expansion import EntityFinder
 from insummer.read_conf import config
 
-if __name__ == '__main__':
+from insummer.query_expansion1.semantic_complement import add
+
+
+def test1():
     conf = config("../../conf/question.conf")
     f = open(conf["title_pos"])
     titles = f.readlines()
@@ -25,3 +28,10 @@ if __name__ == '__main__':
         naive_finder = EntityFinder(title)
         naive_finder.find(display=True)
         indx += 1
+        
+def test2():
+    return add(1,1)        
+    
+if __name__ == '__main__':
+    print(test2())
+    
