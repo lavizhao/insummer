@@ -21,3 +21,7 @@ class Question:
 
     def get_title(self):
         return self.__title    
+    def get_best(self):
+        return self.__best
+    def get_nbest(self):
+        return self.__nbest

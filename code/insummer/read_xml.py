@@ -46,12 +46,11 @@ def extract(fn,target,question_format):
 
         #抽取全部答案, 后面有判断答案数量, 这个在后期会有所修改
         nbest = nbest_re.findall(item)
-        if len(nbest) <=1:
+        if len(nbest) <=5:
             continue
 
         #找到问题所有标题
         title = title_re.findall(item)[0]
-        s = "问题标题 %s\n"%(title)
         
         content = content_re.findall(item)
         if len(content)!=0:
@@ -63,17 +62,25 @@ def extract(fn,target,question_format):
 
         #title,content,best,得到的均是字符串,nbest得到的是一个数组
 
-        new_question = Question(title,content,best,nbest)
-
-        t.write(question_format(new_question))
+        #为了缩减待标语料，每1000个抽一个问题
+        #new_question = Question(title,content,best,nbest)
+        #t.write(question_format(new_question))
         
-        #print("%s"%(50*"="))
-
         if indx%1000 == 0:
+            new_question = Question(title,content,best,nbest)
+            t.write(question_format(new_question))
             print(indx)
 
+#将每个问题的title和best/nbest同时输出,Question[format]增加了成员函数
 def extract_title(tquestion):
-    return tquestion.get_title()+"\n"
+    tmp_title = "---> Question <---\n" + tquestion.get_title()+"\n"
+    tmp_best = "---> Best <---\n" + tquestion.get_best()+"\n"
+    tmp_nbest = "---> Not Best <---\n"
+    for i_dx in tquestion.get_nbest():
+        tmp_nbest += ("--> NBest : " + i_dx + "\n")
+    tmp = tmp_title + tmp_best + tmp_nbest
+    return tmp
+    #return tquestion.get_title()+"\n"
             
 def get_task_function(task_string):
     if task_string == "extract_title":
@@ -99,8 +106,10 @@ def main():
     task_function = get_task_function(options.task)
 
     qconf = config("../../conf/question.conf")
-
+    #question_pos:the path of the manner.xml; title_pos:the path of the title.txt
     extract(qconf["question_pos"],qconf["title_pos"],task_function)
         
 if __name__ == '__main__':
     main()
+
+#11.3 extract_title() add the answer's output.
