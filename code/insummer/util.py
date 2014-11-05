@@ -10,6 +10,7 @@ from nltk.tag.stanford import NERTagger
 from nltk.tag.stanford import POSTagger
 from nltk.stem import WordNetLemmatizer
 from conceptnet5 import nodes
+from bs4 import BeautifulSoup
 
 ncc = nodes.normalized_concept_name
 
@@ -46,3 +47,10 @@ class NLP:
     #将文本归一化,这个用的是conceptNet自带的归一化工具
     def norm_text(self,word):
         return ncc('en',word)
+
+    #去html的tag
+    def remove_tag(self,sentence):
+        sentence = BeautifulSoup(sentence).get_text()
+        sentence = sentence.split()
+        sentence = ' '.join(sentence)
+        return sentence
