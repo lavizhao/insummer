@@ -47,12 +47,12 @@ def extract1(fn,target,question_format):
 
         #抽取全部答案, 后面有判断答案数量, 这个在后期会有所修改
         nbest = nbest_re.findall(item)
-        if len(nbest) <=1:
+        if len(nbest) <=5:
             continue
 
         #找到问题所有标题
         title = title_re.findall(item)[0]
-        s = "问题标题 %s\n"%(title)
+        #s = "问题标题 %s\n"%(title)
         
         content = content_re.findall(item)
         if len(content)!=0:

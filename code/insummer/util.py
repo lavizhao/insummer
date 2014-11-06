@@ -6,8 +6,8 @@ import nltk
 from nltk import word_tokenize
 from textblob import TextBlob
 import textblob
-from nltk.tag.stanford import NERTagger
-from nltk.tag.stanford import POSTagger
+#from nltk.tag.stanford import NERTagger
+#from nltk.tag.stanford import POSTagger
 from nltk.stem import WordNetLemmatizer
 from conceptnet5 import nodes
 from bs4 import BeautifulSoup
@@ -17,8 +17,8 @@ ncc = nodes.normalized_concept_name
 #定义所有NLP的方法
 class NLP:
     def __init__(self):
-        self.__SNER = NERTagger('/home/lavi/package/stanford-ner1/classifiers/english.muc.7class.distsim.crf.ser.gz','/home/lavi/package/stanford-ner1/stanford-ner.jar')
-        self.__SPOS = POSTagger('/home/lavi/package/stanford-postagger/models/english-bidirectional-distsim.tagger','/home/lavi/package/stanford-postagger/stanford-postagger.jar')
+        #self.__SNER = NERTagger('/home/lavi/package/stanford-ner1/classifiers/english.muc.7class.distsim.crf.ser.gz','/home/lavi/package/stanford-ner1/stanford-ner.jar')
+        #self.__SPOS = POSTagger('/home/lavi/package/stanford-postagger/models/english-bidirectional-distsim.tagger','/home/lavi/package/stanford-postagger/stanford-postagger.jar')
 
         self.__np_extractor = textblob.en.np_extractors.ConllExtractor()
 
@@ -40,9 +40,9 @@ class NLP:
         return nltk.tag.pos_tag(tk)
 
     #用stanford进行标注
-    def stanford_tags(self,sentence):
-        tk = word_tokenize(sentence)
-        return self.__SPOS.tag(tk)
+    #def stanford_tags(self,sentence):
+    #    tk = word_tokenize(sentence)
+    #    return self.__SPOS.tag(tk)
 
     #将文本归一化,这个用的是conceptNet自带的归一化工具
     def norm_text(self,word):
