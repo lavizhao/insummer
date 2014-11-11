@@ -34,3 +34,4 @@ class example_entity_finder(abstract_entity_finder):
 
     def find(self,display=False):
         print(display)
+

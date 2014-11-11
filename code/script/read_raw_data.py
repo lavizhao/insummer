@@ -78,14 +78,15 @@ def extract1(fn,target,question_format):
 #question则是需要把文件存储的格式
 #Question类需要使用者回去再好好看一下
 #min_answer_count 是默认的最小答案数
-def extract(fn,target,question_format,min_answer_count=3):
+#pass_filter 是question必须满足的条件,满足则写入
+def extract(fn,target,question_format,min_answer_count=3,pass_filter=None):
 
     #开文件
     f = open(fn)
     t = open(target,"w")
 
     #indx是文件的行号
-    indx,question_indx = 0,0
+    indx,question_indx = 0,1
     title,nbest,answer_count,author = "",[],-1,""
 
     line = f.readline()
@@ -117,14 +118,16 @@ def extract(fn,target,question_format,min_answer_count=3):
             #如果nbest为空,说明没有人答过,不处理
             if len(nbest) > 0:
                 m_question = Question(title,"","",nbest,author,answer_count)
-                question_indx += 1
+                #question_indx += 1
 
                 #往文件里面写
-                if m_question.get_count() > min_answer_count:
+                if m_question.get_count() > min_answer_count and \
+                   pass_filter(m_question):
+                    question_indx += 1
                     t.write(question_format(m_question))
                 
-                if question_indx % 1000 == 0:
-                    print("question indx",question_indx)
+                    if question_indx % 100 == 0:
+                        print("question indx",question_indx)
 
             #重新计数
             if len(line_json["answercount"].strip()) > 0:
@@ -158,7 +161,8 @@ def extract(fn,target,question_format,min_answer_count=3):
             print("indx",indx)
 
     m_question = Question(title,"","",nbest,author,answer_count)
-    if m_question.get_count() > min_answer_count:
+    if m_question.get_count() > min_answer_count and \
+       pass_filter(m_question):
         t.write(question_format(m_question))
             
 def extract_title(tquestion):
@@ -177,7 +181,7 @@ def extract_title1(tquestion):
 
 
 def extract_title_nbest(tquestion):
-    return tquestion.get_title()+"\n"+ tquestion.get_nbest() + 20*"="+"\n"   
+    return tquestion.get_title()+"\n"+ tquestion.get_nbest_content() + 20*"="+"\n"   
             
 def get_task_function(task_string):
     if task_string == "extract_title":
@@ -188,6 +192,32 @@ def get_task_function(task_string):
         print("error in get task function")
         sys.exit(1)
 
+def get_extract_file(task,qconf):
+    result = "error"        
+    if task == "extract_title":
+        result = qconf["title_pos"]
+    elif task == "extract_title_nbest":
+        result = qconf["title_nbest_pos"]
+    else:
+        print("error in extract file choose")
+        sys.exit(1)
+    return result
+
+
+#这个是这么算的,假定title10个单词
+#nbest 的规定数量不是在这里算的
+#假定每个nbest至少也得有5句话,要不不能进行摘要, 则每句10个单词, 那么每个答案50个单词
+def word_counts_filter(question):
+    #每句最少10个单词
+    min_sentence_counts = 8
+
+    min_word_counts = min_sentence_counts + len(question.get_nbest())*min_sentence_counts * 5
+    if question.get_word_counts() >= min_word_counts:
+        if question.get_title_words() >= min_sentence_counts:
+            return True
+
+    return False
+    
 def main():
     """
     主函数,-t表示什么任务
@@ -198,17 +228,27 @@ def main():
     parser = OptionParser()  
     parser.add_option("-t", "--task",dest="task",default="error",help="你需要选择哪个任务")
 
+
+    #分析命令行参数
     (options, args) = parser.parse_args()
 
+    #检查错误
     if options.task == "error":
         print("请选择任务")
         sys.exit(1)
 
+    #得到如何往文件里面写的格式
     task_function = get_task_function(options.task)
 
+    #得到注册文件
     qconf = config("../../conf/question.conf")
 
-    extract(qconf["computer_pos"],qconf["title_pos"],task_function)
+    #得到将要写入的文件名
+    extract_file = get_extract_file(options.task,qconf)
+
+    
+    #进行抽取
+    extract(qconf["computer_pos"],extract_file,task_function,min_answer_count=10,pass_filter=word_counts_filter)
         
 if __name__ == '__main__':
     main()

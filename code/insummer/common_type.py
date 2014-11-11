@@ -38,7 +38,7 @@ class Question:
         return len(self.__nbest)
 
     #得到所有答案的内容
-    def get_nbest(self):
+    def get_nbest_content(self):
         target = ""
         indx = 0
         for i in self.__nbest:
@@ -46,7 +46,29 @@ class Question:
             indx += 1
 
         return target
-            
+
+
+    def get_nbest(self):
+        return self.__nbest
+        
+    def get_word_counts(self):
+        result = 0
+
+        #加上title的单词数
+        result += len(self.__title.split())
+
+        #加上best的单词数
+        result += len(self.__best.split())
+
+        #加上nbest的单词数
+        for one_nbest in self.__nbest:
+            result += len(one_nbest.get_content().split())
+
+        return result
+
+    def get_title_words(self):
+        return len(self.__title.split())
+        
     def print(self):
         print(20*"=")
         print("title",self.__title)
@@ -80,3 +102,18 @@ class Answer:
                                  ,self.__support,self.__oppose,self.__author)
 
 
+class NaiveQuestion(Question):
+    def __init__(self,title,entity):
+        Question.__init__(self,title,"","",None,None,None)
+        self.__entity = entity
+
+    def get_word_counts(self):
+        return len(self.get_title().split())
+
+    def get_entity(self):
+        return self.__entity
+        
+    def print(self):
+        print("title",self.get_title())
+        st = ' '.join(self.__entity)
+        print("entity",st)
