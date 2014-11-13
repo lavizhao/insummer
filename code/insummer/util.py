@@ -11,7 +11,9 @@ import textblob
 from nltk.stem import WordNetLemmatizer
 from conceptnet5 import nodes
 from bs4 import BeautifulSoup
-
+from textblob.tokenizers import SentenceTokenizer as sent_tok
+from textblob.tokenizers import WordTokenizer as word_tok
+from conceptnet5.language.english import normalize
 ncc = nodes.normalized_concept_name
 
 #定义所有NLP的方法
@@ -24,6 +26,9 @@ class NLP:
 
         self.__wnl = WordNetLemmatizer()
 
+        self.__st = sent_tok()
+
+        self.__wt = word_tok()
 
     #用blob进行标注
     def blob_tags(self,sentence):
@@ -45,8 +50,9 @@ class NLP:
     #    return self.__SPOS.tag(tk)
 
     #将文本归一化,这个用的是conceptNet自带的归一化工具
-    def norm_text(self,word):
-        return ncc('en',word)
+    def norm_text(self,text):
+        #return ncc('en',word)
+        return normalize(text)
 
     #去html的tag
     def remove_tag(self,sentence):
@@ -54,3 +60,29 @@ class NLP:
         sentence = sentence.split()
         sentence = ' '.join(sentence)
         return sentence
+
+    #分句
+    def sent_tokenize(self,sents):
+        result = self.__st.tokenize(sents)
+        return result
+
+    def word_tokenize(self,sent):
+        return self.__wt.tokenize(sent)
+        
+
+    def bigrams(self,sent_tok):
+        return nltk.bigrams(sent_tok)
+
+    #判断pos是不是名词,即以N或n开头
+    def tag_is_noun(self,tag):
+        if tag.startswith('N'):
+            return True
+
+        return False
+
+    #判断pos是不是动词
+    def tag_is_verb(self,tag):
+        if tag.startswith('V'):
+            return True
+
+        return False

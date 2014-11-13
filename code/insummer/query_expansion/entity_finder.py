@@ -10,11 +10,16 @@
 #find通用方法, 查找到所有的实体, 返回一个entity string 类的list, 这样做的好处是, 用entity string 进行封装, 使得里面的比如get sick这样的词组可以进行二次查询, 扩大搜索范围
 
 from abc import ABCMeta, abstractmethod
+from conceptnet5.language.english import normalize
+from ..util import NLP
+from ..conceptnet_tool import conceptnet_has_concept
+
+nlp = NLP()
 
 class abstract_entity_finder(metaclass=ABCMeta):
 
-    def __init__(self,question):
-        self.question = question
+    def __init__(self,sentence):
+        self.__sentence = sentence
 
     #这个是抽象方法,是必须定义的
     #display 属性是debug用的, 可以打印几个阶段什么的
@@ -23,6 +28,8 @@ class abstract_entity_finder(metaclass=ABCMeta):
     def find(self,display=False):
         pass
 
+    def get_sentence(self):
+        return self.__sentence
 
 class example_entity_finder(abstract_entity_finder):
 
@@ -30,8 +37,91 @@ class example_entity_finder(abstract_entity_finder):
         abstract_entity_finder.__init__(self,question)
 
     def print(self):
-        print(self.question.get_title())
+        print(self.get_sentence().get_title())
 
     def find(self,display=False):
         print(display)
 
+
+#这个类主要利用的方法是寻找出所有符合ngram的实体来, 当然现在我只考虑bigram
+#注意这里的输入是每一句话,而不是一个答案
+#那么我们的第一步是利用conceptNet内置的stem进行stem
+
+class NgramEntityFinder(abstract_entity_finder):
+
+    def __init__(self,sentence):
+        abstract_entity_finder.__init__(self,sentence)
+
+    def find(self,display=False):
+        #第一步stem所有句子, 这里有将/替换成空格,这个比较有必要
+        sent = self.get_sentence().replace('/',' ')
+        sent = self.get_sentence().replace('-',' ')
+        stem_sent = nlp.norm_text(sent)
+
+        #第二步,word tokenize
+        tok_sent = nlp.word_tokenize(stem_sent)
+
+        #先POS-tagging
+        pos_sent = nlp.blob_tags(sent)
+
+        #bigram
+        bgm = nlp.bigrams(pos_sent)
+
+        #cand 是已经确定候选的词的集合, 已经经过词形转换了,是个set
+        cand = set([])
+        for (word1,tag1),(word2,tag2) in bgm:
+            
+            sword1,sword2 = nlp.norm_text(word1),nlp.norm_text(word2)
+            sword12 = sword1+"_"+sword2
+            
+            condition = self.build_condition(tag1,tag2)
+
+            self.process_condition(sword1,sword2,sword12,cand,condition)
+
+        if display==True:
+            print("orign    sent:|| %s ||"%(self.get_sentence()))
+            #print("stem     sent:|| %s ||"%(stem_sent))
+            #print("tokenize sent:|| %s ||"%(tok_sent))
+            #print("pos-tag  word:|| %s ||"%(pos_sent))
+            print("cand     word:|| %s ||"%(cand))
+            print(100*"=")
+
+
+    #得到三种tag
+    def get_small_tag(self,tag):
+        if nlp.tag_is_noun(tag):
+            return 'n'
+        elif nlp.tag_is_verb(tag):
+            return 'v'
+        else:
+            return 'o'
+            
+    #建状态可以输入的tag有以下几种,n->名词, v动词 , o其他
+    def build_condition(self,tag1,tag2):
+        t1,t2 = self.get_small_tag(tag1),self.get_small_tag(tag2)
+        return t1+'+'+t2
+
+    def add_both(self,word1,word2,word12,cand):
+        if word12 not in cand and conceptnet_has_concept(word12) :
+            cand.add(word12)
+        else:
+            if word1 not in cand and conceptnet_has_concept(word1) :
+                cand.add(word1)
+            if word2 not in cand and conceptnet_has_concept(word2) :
+                cand.add(word2)
+
+    def add_first(self,word1,cand):
+        if word1 not in cand and conceptnet_has_concept(word1) :
+            cand.add(word1)
+
+    def add_last(self,word2,cand):
+        if word2 not in cand and conceptnet_has_concept(word2) :
+            cand.add(word2)
+            
+    def process_condition(self,word1,word2,word12,cand,condition):
+        if condition == 'n+n' or condition == 'v+v' or condition == 'v+n':
+            self.add_both(word1,word2,word12,cand)
+        elif condition == 'v+o' or condition == 'n+o':
+            self.add_first(word1,cand)
+        elif condition == 'o+v' or condition == 'o+n':
+            self.add_last(word2,cand)

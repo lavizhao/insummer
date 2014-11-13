@@ -65,16 +65,17 @@ if __name__ == '__main__':
         terms = question.get_entity()
         terms = [('/c/en/'+i,1.0) for i in terms]
 
-        result = sa.expand_terms(terms)
+        result = sa.expand_terms(terms,100)
 
         for term,weight in result:
-            if term.startswith('/c/en'):
-                print("%40s%40s"%(term[6:],weight))
+            #if term.startswith('/c/en') and len(term) < 40:
+            #print("%40s%40s"%(term[6:],weight))
+            print("%40s%40s"%(term,weight))
 
         result1 = sa.associations(terms,limit=40)
     
         for term,weight in result1:
-            if term.startswith('/c/en'):
+            if term.startswith('/c/en') and len(term) < 40:
                 print("%40s%40s"%(term[6:],weight))
 
 
