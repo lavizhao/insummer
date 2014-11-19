@@ -2,9 +2,12 @@
 这个文件的作用是封装conceptNet的一些功能,使得进行交互更为简单
 '''
 
-from .util import NLP
+from ..util import NLP
 from conceptnet5.query import lookup
+from conceptnet5.query import field_match
 import sys
+
+SMALL = 1e-6
 
 nlp = NLP()
 
@@ -80,9 +83,16 @@ class NaiveAccocSpaceWrapper(object):
             return []
         return [(term, weight / total_weight) for (term, weight) in expanded]
 
+    def norm_terms(self,terms):
+        total_weight = sum(abs(weight) for (term, weight) in terms)
+        if total_weight == 0:
+            return []
+        return [(term, weight / total_weight) for (term, weight) in terms]
+
     def associations(self, terms, filter=None, limit=20):
         self.load()
         vec = self.assoc.vector_from_terms(self.expand_terms(terms))
+        #vec = self.assoc.vector_from_terms(self.norm_terms(terms))
         similar = self.assoc.terms_similar_to_vector(vec)
         similar = [
             item for item in similar if item[1] > SMALL

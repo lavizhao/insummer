@@ -117,3 +117,6 @@ class NaiveQuestion(Question):
         print("title",self.get_title())
         st = ' '.join(self.__entity)
         print("entity",st)
+
+    def set_entity(self,entity):
+        self.__entity = entity

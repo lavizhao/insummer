@@ -9,10 +9,13 @@ import insummer
 from insummer.common_type import NaiveQuestion
 
 from insummer.read_conf import config
+from insummer.knowledge_base import init_assoc_space
+from insummer.query_expansion.entity_finder import NgramEntityFinder
 
 from conceptnet5 import assoc_query
 from conceptnet5 import query
 from conceptnet5.query import AssertionFinder as Finder
+
 
 #读数据,是个json群
 def read_data(fname):
@@ -47,16 +50,28 @@ if __name__ == '__main__':
     print("需要做的第一步是读取数据,建立一个比较虚假的quesion_list类")
 
     #注册表
-    conf = config("../../conf/question.conf")
+    #conf = config("../../conf/question.conf")
 
     #读数据
-    questions = read_data(conf["title_qe_pos"])
+    #questions = read_data(conf["title_qe_pos"])
 
     #装载spreading activation
-    finder = Finder()
-    dir1 = '/home/lavi/.conceptnet5/assoc/assoc-space-5.3'
+    #finder = Finder()
+    #dir1 = '/home/lavi/.conceptnet5/assoc/assoc-space-5.3'
+    #sa = assoc_query.AssocSpaceWrapper(dir1,finder)
 
-    sa = assoc_query.AssocSpaceWrapper(dir1,finder)
+    title = "How do Motorcycles pollute? Are Motorcycles the worst polluter.if not what is?What are the ways Motorcycles pollute. "
+    nq = NaiveQuestion(title,entity=None)
+
+    #找实体
+    ef = NgramEntityFinder(title)
+    entity = ef.find()
+    print(entity)
+    
+    nq.set_entity(entity)
+    questions = [nq]
+
+    sa = init_assoc_space()
 
     g = lambda x : x.startswith('/c/en')
     
@@ -65,19 +80,21 @@ if __name__ == '__main__':
         terms = question.get_entity()
         terms = [('/c/en/'+i,1.0) for i in terms]
 
-        result = sa.expand_terms(terms,100)
+        result = sa.expand_terms(terms,40)
 
         for term,weight in result:
-            #if term.startswith('/c/en') and len(term) < 40:
-            #print("%40s%40s"%(term[6:],weight))
-            print("%40s%40s"%(term,weight))
+            if term.startswith('/c/en') and len(term) < 40:
+                print("%40s%40s"%(term[6:],weight))
+            #print("%40s%40s"%(term,weight))
 
+        print(100*"=")
+            
         result1 = sa.associations(terms,limit=40)
-    
+
         for term,weight in result1:
             if term.startswith('/c/en') and len(term) < 40:
                 print("%40s%40s"%(term[6:],weight))
-
+                #print("%40s%40s"%(term,weight))
 
         print(40*"=")
         

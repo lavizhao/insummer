@@ -31,7 +31,7 @@ def test1():
 if __name__ == '__main__':
     #test1()
 
-    result = nlp.sent_tokenize(answer)
+    result = nlp.sent_tokenize(title)
     for sent in result:
         ngram = NgramEntityFinder(sent)
 

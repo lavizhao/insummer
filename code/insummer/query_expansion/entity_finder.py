@@ -12,7 +12,7 @@
 from abc import ABCMeta, abstractmethod
 from conceptnet5.language.english import normalize
 from ..util import NLP
-from ..conceptnet_tool import conceptnet_has_concept
+from ..knowledge_base import conceptnet_has_concept
 
 nlp = NLP()
 
@@ -80,13 +80,14 @@ class NgramEntityFinder(abstract_entity_finder):
 
         if display==True:
             print("orign    sent:|| %s ||"%(self.get_sentence()))
-            #print("stem     sent:|| %s ||"%(stem_sent))
-            #print("tokenize sent:|| %s ||"%(tok_sent))
-            #print("pos-tag  word:|| %s ||"%(pos_sent))
+            print("stem     sent:|| %s ||"%(stem_sent))
+            print("tokenize sent:|| %s ||"%(tok_sent))
+            print("pos-tag  word:|| %s ||"%(pos_sent))
             print("cand     word:|| %s ||"%(cand))
             print(100*"=")
 
-
+        return list(cand)
+            
     #得到三种tag
     def get_small_tag(self,tag):
         if nlp.tag_is_noun(tag):
@@ -119,7 +120,9 @@ class NgramEntityFinder(abstract_entity_finder):
             cand.add(word2)
             
     def process_condition(self,word1,word2,word12,cand,condition):
-        if condition == 'n+n' or condition == 'v+v' or condition == 'v+n':
+        if condition == 'n+n' or condition == 'v+v':
+            self.add_both(word1,word2,word12,cand)
+        elif condition == 'n+v' or condition == 'v+n':
             self.add_both(word1,word2,word12,cand)
         elif condition == 'v+o' or condition == 'n+o':
             self.add_first(word1,cand)
