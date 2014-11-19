@@ -1,5 +1,5 @@
 '''
-这个文件的作用是封装conceptNet的一些功能,使得进行交互更为简单
+这个模块的作用主要是封装KB的一些功能,变相做接口了
 '''
 
 from ..util import NLP
@@ -11,21 +11,29 @@ SMALL = 1e-6
 
 nlp = NLP()
 
-#这个函数的作用是检测概念是否在conceptNet中,如果在则返回true, 如果不在返回false
-def conceptnet_has_concept(concept):
-    
-    ans1 = lookup('/c/en/'+concept)
+#定义与概念相关的常用函数集
+class concept_tool(object):
+    def __init__(self):
+        pass
 
-    indx = 0
-    for item in ans1:
-        indx += 1
+    def is_english_concept(self,cp):
+        #assert cp.startswith('/c')
+        return cp.startswith('/c/en/')
+        
+    #这个函数的作用是检测概念是否在conceptNet中,如果在则返回true, 如果不在返回false
+    def conceptnet_has_concept(self,concept):
+        ans1 = lookup('/c/en/'+concept)
+        indx = 0
+        for item in ans1:
+            indx += 1
+            if indx > 0:
+                break
+
         if indx > 0:
-            break
+            return True
 
-    if indx > 0:
-        return True
-
-    return False
+        return False
+        
 
 #试验品
 class NaiveAccocSpaceWrapper(object):
@@ -110,3 +118,6 @@ def init_assoc_space():
 
     return sa
     
+
+cp_tool = concept_tool()
+conceptnet_has_concept = cp_tool.conceptnet_has_concept

@@ -3,7 +3,7 @@ __pycache__/
 *.py[cod]
 
 *~
-
+cn_data/
 conf/
 question_data/
 question/
