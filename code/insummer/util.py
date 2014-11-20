@@ -4,6 +4,7 @@
 
 import nltk
 from nltk import word_tokenize
+#from nltk.corpus import stopwords
 from textblob import TextBlob
 import textblob
 #from nltk.tag.stanford import NERTagger
@@ -15,6 +16,12 @@ from textblob.tokenizers import SentenceTokenizer as sent_tok
 from textblob.tokenizers import WordTokenizer as word_tok
 from conceptnet5.language.english import normalize
 ncc = nodes.normalized_concept_name
+from .read_conf import config
+
+stopwords = open(config("../../conf/cn_data.conf")["stop_pos"])
+stopwords = stopwords.readlines()
+stopwords = [i.strip() for i in stopwords]
+
 
 #定义所有NLP的方法
 class NLP:
@@ -29,6 +36,9 @@ class NLP:
         self.__st = sent_tok()
 
         self.__wt = word_tok()
+
+        #self.__stopwords = set(stopwords.words('english'))
+        self.__stopwords = set(stopwords)
 
     #用blob进行标注
     def blob_tags(self,sentence):
@@ -86,3 +96,6 @@ class NLP:
             return True
 
         return False
+
+    def is_stopwords(self,word):
+        return word in self.__stopwords

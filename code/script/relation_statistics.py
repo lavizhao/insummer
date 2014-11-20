@@ -45,6 +45,12 @@ def triple_criterion(rel,cp1,cp2):
     else:
         return False
 
+#这个是观察结构用的
+def print_criterion(rel,cp1,cp2):
+    rel_name = rel_tool.rel_name(rel)
+    if rel_name == 'HasProperty':
+        print("%20s%40s%40s"%(rel_name,cp1,cp2))
+        
 def main():
     result = {}
     indx = 0
@@ -69,7 +75,10 @@ def main():
 
                 result[rel_name][positive] += 1
                 indx += 1
-                if indx %10000 == 0:
+
+                print_criterion(rel,cp1,cp2)
+                
+                if indx %1000000 == 0:
                     print(indx)
 
     #循环完了,该输出统计了

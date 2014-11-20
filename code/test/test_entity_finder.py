@@ -31,10 +31,11 @@ def test1():
 if __name__ == '__main__':
     #test1()
 
-    result = nlp.sent_tokenize(title)
+    result = nlp.sent_tokenize(answer)
     for sent in result:
         ngram = NgramEntityFinder(sent)
 
-        ngram.find(display=True)
+        #ngram.find(display=True)
+        ngram.extract_entity(display=True)
     
 

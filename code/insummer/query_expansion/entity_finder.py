@@ -18,8 +18,10 @@ nlp = NLP()
 
 class abstract_entity_finder(metaclass=ABCMeta):
 
-    def __init__(self,sentence):
+    def __init__(self,sentence,words_filter=None):
         self.__sentence = sentence
+        self.__words_filter = words_filter
+        self.__entity = None
 
     #这个是抽象方法,是必须定义的
     #display 属性是debug用的, 可以打印几个阶段什么的
@@ -31,6 +33,29 @@ class abstract_entity_finder(metaclass=ABCMeta):
     def get_sentence(self):
         return self.__sentence
 
+    #设定实体结果
+    def set_entity(self,entity):
+        assert len(entity) >= 0
+        self.__entity = entity
+
+    def get_entity(self):
+        return self.__entity
+        
+    def filter_words(self):
+        if self.__words_filter == None:
+            return
+        else:
+            result = list(filter(self.__words_filter,self.__entity))
+            return result
+
+    def extract_entity(self,display=False):
+        self.find(display)
+        result = self.filter_words()
+        if display:
+            print("final  word:|| %s ||"%(result))
+        print(100*"=")
+        return result
+        
 class example_entity_finder(abstract_entity_finder):
 
     def __init__(self,question):
@@ -43,6 +68,12 @@ class example_entity_finder(abstract_entity_finder):
         print(display)
 
 
+def stopwords_filter(word):
+    if nlp.is_stopwords(word):
+        return False
+    else:
+        return True
+    
 #这个类主要利用的方法是寻找出所有符合ngram的实体来, 当然现在我只考虑bigram
 #注意这里的输入是每一句话,而不是一个答案
 #那么我们的第一步是利用conceptNet内置的stem进行stem
@@ -50,7 +81,7 @@ class example_entity_finder(abstract_entity_finder):
 class NgramEntityFinder(abstract_entity_finder):
 
     def __init__(self,sentence):
-        abstract_entity_finder.__init__(self,sentence)
+        abstract_entity_finder.__init__(self,sentence,stopwords_filter)
 
     def find(self,display=False):
         #第一步stem所有句子, 这里有将/替换成空格,这个比较有必要
@@ -84,8 +115,9 @@ class NgramEntityFinder(abstract_entity_finder):
             print("tokenize sent:|| %s ||"%(tok_sent))
             print("pos-tag  word:|| %s ||"%(pos_sent))
             print("cand     word:|| %s ||"%(cand))
-            print(100*"=")
 
+        self.set_entity(list(cand))
+            
         return list(cand)
             
     #得到三种tag
