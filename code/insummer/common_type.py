@@ -86,7 +86,7 @@ class Question:
 #2.支持反对数目
 #3.作者hash值
 class Answer:
-    def __init__(self,sentence,support,oppose,author):
+    def __init__(self,sentence,support=0,oppose=0,author=""):
         self.type_name = "Answer"
         self.__content = nlp.remove_tag(sentence)
         self.__support = support

@@ -53,7 +53,7 @@ class abstract_entity_finder(metaclass=ABCMeta):
         result = self.filter_words()
         if display:
             print("final  word:|| %s ||"%(result))
-        print(100*"=")
+            print(100*"=")
         return result
         
 class example_entity_finder(abstract_entity_finder):
