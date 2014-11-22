@@ -29,7 +29,9 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
 
         self.__expand_entity = None
 
-    
+    def get_title(self):
+        return self.__question.get_title()
+        
     def get_question(self):
         return self.__question
 
@@ -90,8 +92,51 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
         #评价,这个还没有弄
 
     
+#这个算法只扩展同义词类
+class OnlySynExpansioner(abstract_entity_expansioner):
+    def __init__(self,mquestion,entity_finder):
+        abstract_entity_expansioner.__init__(self,mquestion,entity_finder)
 
 
+    #扩展
+    def expand(self):
+        title = self.get_title()
+
+        base_entity = set()
+
+        #先抽取问题的实体
+        sentences = nlp.sent_tokenize(title)
+        for sentence in sentences:
+            finder = NgramEntityFinder(sentence)
+            entity = finder.extract_entity()
+            if len(entity) > 0:
+                base_entity.union(set(entity))
+
+        #开始扩展
+        #算法流程打算用基于栈的非递归方法
+        
+        #1. 记录当前的实体数量
+        previous_entity_length = len(base_entity)
+
+        #2. expand_entity初始化设为base_entity
+        expand_entity = base_entity.copy()
+
+        #3. 假设扩展之前 a,b,c 当a,b,c 都扩展完之后, 需要与之前的比较大小, 那么之前的需要初始化进行记录
+        previous_expand_entity = expand_entity.copy()
+
+        #4. 判断条件, 1. expand_entity 的体积没有增长, 2.previous_expand_entity 已经遍历完了
+        while True:
+
+            #对每个前一轮的实体来说
+            for entity in previous_expand_entity:
+                
+            
+            #扩展的集合体积没有增长, 则说明循环结束, 跳出循环, 如不然则重新赋值
+            if len(expand_entity) == previous_expand_entity:
+                break;
+            else:
+                previous_entity_length = len(expand_entity)
+                previous_expand_entity = expand_entity.copy()
     
 
 

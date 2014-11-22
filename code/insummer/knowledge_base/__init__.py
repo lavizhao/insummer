@@ -19,6 +19,17 @@ class concept_tool(object):
     def is_english_concept(self,cp):
         #assert cp.startswith('/c')
         return cp.startswith('/c/en/')
+
+    #给concept加/c/en
+    def add_prefix(self,entity):
+        cp = '/c/en/'+entity if not entity.startswith('/c/en/') else entity
+        return cp
+
+    def concept_name(self,entity):
+        if entity.startswith('/c/en/'):
+            return entity[6:]
+        else:
+            return entity
         
     #这个函数的作用是检测概念是否在conceptNet中,如果在则返回true, 如果不在返回false
     def conceptnet_has_concept(self,concept):

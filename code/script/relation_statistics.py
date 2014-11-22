@@ -76,7 +76,7 @@ def main():
                 result[rel_name][positive] += 1
                 indx += 1
 
-                print_criterion(rel,cp1,cp2)
+                #print_criterion(rel,cp1,cp2)
                 
                 if indx %1000000 == 0:
                     print(indx)
@@ -85,7 +85,18 @@ def main():
     for rel_name in result:
         sta = result[rel_name]
         print("relation name : %30s , pos : %20s , neg : %20s"%(rel_name,sta['pos'],sta['neg']))
+
+    #下面输出哈希字典
+    pp = ""    
+    indx = 0
+    for rel_name in result:
+        if result[rel_name]['pos'] > 550:
+            pp += ("\'%s\':%s,\n"%(rel_name,indx)) 
+            indx += 1
+
+    print(pp)
     
+        
 #这个就不用其他功能了, 省得弄得非常蛋疼    
 if __name__ == '__main__':
     main()
