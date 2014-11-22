@@ -33,6 +33,13 @@ class abstract_entity_lookup(metaclass=ABCMeta):
     def lookup_entity_with_reltype():
         pass
 
+#这个定义通用的concept限制条件, 一般都会用这个, 
+def common_limit(cp1,cp2,rel,cp):
+    if cn_tool.both_english_concept(cp1,cp2):
+        return True
+    else:
+        return False
+    
 #这个是利用conceptnet进行查找的类, 这个速度肯定不会快
 class ConceptnetEntityLookup(abstract_entity_lookup):
 
@@ -62,11 +69,19 @@ class ConceptnetEntityLookup(abstract_entity_lookup):
                 else:
                     result.append(neighbour)
 
+        result = self.remove_prefix_suffix(result)                    
+        return result
+
+    def remove_prefix_suffix(self,entity_list):
+        result = set()
+        for i in entity_list:
+            result.add(cn_tool.concept_name(i))
+
         return result
         
-        
     def synonym_entity(self,entity):
-        result = self.lookup_entity_with_reltype(entity,rel_tool.synonym_type)
+        result = self.lookup_entity_with_reltype(entity,rel_tool.synonym_type,common_limit)
+
         return result
 
 

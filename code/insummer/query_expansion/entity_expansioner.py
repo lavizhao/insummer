@@ -4,12 +4,15 @@
 说明:这个文件是查询扩展类,主要负责查询扩展方面的工作
 '''
 
+import sys
 from abc import ABCMeta, abstractmethod
 from ..common_type import Question
 from ..util import NLP
 from .entity_finder import NgramEntityFinder
+from ..knowledge_base.entity_lookup import ConceptnetEntityLookup
 
 nlp = NLP()
+searcher = ConceptnetEntityLookup()
 
 #定义抽象类
 #这个类是实体扩展的类,主要功能是
@@ -45,7 +48,6 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
     def construct_sentence_entity(self):
         #先把所有answer取出来
         answers = self.get_answers()
-
 
         #对于每一个答案
         for answer in answers:
@@ -107,10 +109,11 @@ class OnlySynExpansioner(abstract_entity_expansioner):
         #先抽取问题的实体
         sentences = nlp.sent_tokenize(title)
         for sentence in sentences:
+            print(sentence)
             finder = NgramEntityFinder(sentence)
             entity = finder.extract_entity()
             if len(entity) > 0:
-                base_entity.union(set(entity))
+                base_entity = base_entity.union(set(entity))
 
         #开始扩展
         #算法流程打算用基于栈的非递归方法
@@ -125,18 +128,26 @@ class OnlySynExpansioner(abstract_entity_expansioner):
         previous_expand_entity = expand_entity.copy()
 
         #4. 判断条件, 1. expand_entity 的体积没有增长, 2.previous_expand_entity 已经遍历完了
+        indx = 0
         while True:
 
             #对每个前一轮的实体来说
             for entity in previous_expand_entity:
+                #进行同义词扩展
+                temp_expand_entity = searcher.synonym_entity(entity)
+
+                #合并
+                expand_entity = expand_entity.union(temp_expand_entity)
                 
-            
+            print("level %s : %s "%(indx,expand_entity))
+            indx += 1    
             #扩展的集合体积没有增长, 则说明循环结束, 跳出循环, 如不然则重新赋值
             if len(expand_entity) == previous_expand_entity:
                 break;
             else:
                 previous_entity_length = len(expand_entity)
                 previous_expand_entity = expand_entity.copy()
-    
+
+        return expand_entity
 
 

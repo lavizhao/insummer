@@ -20,16 +20,28 @@ class concept_tool(object):
         #assert cp.startswith('/c')
         return cp.startswith('/c/en/')
 
+    def both_english_concept(self,cp1,cp2):
+        return self.is_english_concept(cp1) and \
+            self.is_english_concept(cp2)
+
     #给concept加/c/en
     def add_prefix(self,entity):
         cp = '/c/en/'+entity if not entity.startswith('/c/en/') else entity
         return cp
 
     def concept_name(self,entity):
+        #去前缀    
         if entity.startswith('/c/en/'):
-            return entity[6:]
+            entity = entity[6:]
         else:
+            entity = entity
+
+        #去后缀
+        suffix = entity.find('/')
+        if suffix == -1:
             return entity
+        else:
+            return entity[:suffix]
         
     #这个函数的作用是检测概念是否在conceptNet中,如果在则返回true, 如果不在返回false
     def conceptnet_has_concept(self,concept):

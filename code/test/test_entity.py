@@ -8,16 +8,24 @@ import insummer
 
 from insummer.knowledge_base.entity_lookup import ConceptnetEntityLookup
 from insummer.knowledge_base import concept_tool
+from insummer.query_expansion.entity_expansioner import OnlySynExpansioner
+from insummer.common_type import Question
+from insummer.query_expansion.entity_finder import example_entity_finder,NgramEntityFinder
 
 cn = concept_tool()
+finder = NgramEntityFinder
+
+title = "How do Motorcycles pollute?"
+
+fuck = Question(title,"","",[])
 
 if __name__ == '__main__':
     print("hello")
-    cel = ConceptnetEntityLookup()
     entity = 'pollute'
 
-    result = cel.synonym_entity(entity)
+    ose = OnlySynExpansioner(fuck,finder)
+    result = ose.expand()
 
     for i in result:
-        print(cn.concept_name(i))
+        print(i)
 
