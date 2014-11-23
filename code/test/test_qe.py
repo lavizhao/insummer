@@ -13,6 +13,10 @@ from insummer.common_type import Question,Answer
 from insummer.util import NLP
 from insummer.query_expansion.entity_expansioner import abstract_entity_expansioner
 
+import data
+
+questions = data.get_data()
+
 nlp = NLP()
 
 title = "How do Motorcycles pollute?"

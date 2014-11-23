@@ -18,10 +18,13 @@ f = open(data_dir,'rb')
 
 data = pickle.load(f)
 
+def get_data():
+    return data
 
 
 if __name__ == '__main__':
     
     print("hello")
     
-    print(len(data ))
+    print(len(data))
+    data[0].print()

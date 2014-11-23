@@ -10,6 +10,7 @@ from ..common_type import Question
 from ..util import NLP
 from .entity_finder import NgramEntityFinder
 from ..knowledge_base.entity_lookup import ConceptnetEntityLookup
+from ..evaluation import bias_overlap_ratio
 
 nlp = NLP()
 searcher = ConceptnetEntityLookup()
@@ -29,6 +30,9 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
         #这个包含的是每个句子中的实体和句子
         #基本结构是[ (sentence(without tokenize) , [entity]  ) ]
         self.__sentence_entity = []
+
+        #这个是所有句子中所有的实体
+        self.__sentence_total_entity = set([])
 
         self.__expand_entity = None
 
@@ -66,6 +70,9 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
                 #找出所有实体
                 entity = finder.extract_entity(display=False)
 
+                #把总实体相加
+                self.__sentence_total_entity = self.__sentence_total_entity.union(set(entity))
+
                 #加入结果集中
                 if len(entity) >0 :
                     self.append_sentence_entity((sentence,entity))
@@ -81,6 +88,14 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
     def expand(self):
         pass
 
+        
+    #评价实体扩充的好坏, 这个方法因为不唯一, 所以也有可能扩充到好几个方法
+    #expand terms是一个set
+    #另一个现有的数据是self.__sentence_entity, 因为可以直接访问到, 所以不会另建一个
+    def evaluation(self,expand_terms):
+        #print(self.__sentence_total_entity)
+        return bias_overlap_ratio(expand_terms,self.__sentence_total_entity)
+        
     #主体调用的函数
     #先把句子中所有的实体都抽出来
     #再进行实体扩展, 然后进行评价
@@ -92,13 +107,16 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
         expand_terms = self.expand()
 
         #评价,这个还没有弄
+        result = self.evaluation(expand_terms)
 
+        print("====",result)
     
 #这个算法只扩展同义词类
 class OnlySynExpansioner(abstract_entity_expansioner):
-    def __init__(self,mquestion,entity_finder):
+    #max level是可扩展到最大层数, 如需要两层 则level = 2
+    def __init__(self,mquestion,entity_finder,max_level):
         abstract_entity_expansioner.__init__(self,mquestion,entity_finder)
-
+        self.level = max_level
 
     #扩展
     def expand(self):
@@ -120,7 +138,7 @@ class OnlySynExpansioner(abstract_entity_expansioner):
         
         #1. 记录当前的实体数量
         previous_entity_length = len(base_entity)
-        print(base_entity)
+        #print(base_entity)
 
         #2. expand_entity初始化设为base_entity
         expand_entity = base_entity.copy()
@@ -130,7 +148,7 @@ class OnlySynExpansioner(abstract_entity_expansioner):
 
         #4. 判断条件, 1. expand_entity 的体积没有增长, 2.previous_expand_entity 已经遍历完了
         indx = 0
-        while True:
+        while indx < self.level:
 
             #对每个前一轮的实体来说
             for entity in previous_expand_entity:
@@ -140,7 +158,7 @@ class OnlySynExpansioner(abstract_entity_expansioner):
                 #合并
                 expand_entity = expand_entity.union(temp_expand_entity)
                 
-            print("level %s , length %s : %s "%(indx,len(expand_entity),expand_entity))
+            #print("level %s , length %s : %s "%(indx,len(expand_entity),expand_entity))
             indx += 1    
             #扩展的集合体积没有增长, 则说明循环结束, 跳出循环, 如不然则重新赋值
             if len(expand_entity) == previous_expand_entity:

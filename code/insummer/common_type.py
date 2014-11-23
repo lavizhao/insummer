@@ -75,7 +75,7 @@ class Question:
         print("content",self.__content)
         print("best",self.__best)
         for i,indx in enumerate(self.__nbest):
-            print("====",indx,i)
+            print("====",i,indx)
         print("author",self.__author)
         print("count",self.__count)
         print(20*"=")
