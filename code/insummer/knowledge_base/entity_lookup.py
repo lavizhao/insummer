@@ -66,6 +66,7 @@ class ConceptnetEntityLookup(abstract_entity_lookup):
                 if other_limit != None :
                     if other_limit(start,end,rel,entity):
                         result.append(neighbour)
+                        #print("start %30s || rel %20s ||end %30s"%(cn_tool.concept_name(start),rel,cn_tool.concept_name(end)))    
                 else:
                     result.append(neighbour)
 

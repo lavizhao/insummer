@@ -16,6 +16,7 @@ cn = concept_tool()
 finder = NgramEntityFinder
 
 title = "How do Motorcycles pollute?"
+#title = "what's wrong with my bike?"
 
 fuck = Question(title,"","",[])
 

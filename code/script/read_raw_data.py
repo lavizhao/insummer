@@ -10,6 +10,7 @@ sys.path.append("..")
 import insummer
 from insummer.common_type import Question,Answer
 from insummer.read_conf import config
+import pickle
 
 #抽取文件的函数,我的设想是传进去函数,然后使用函数返回调用
 #question_format是个函数,通过调用返回写入文件的格式
@@ -79,7 +80,7 @@ def extract1(fn,target,question_format):
 #Question类需要使用者回去再好好看一下
 #min_answer_count 是默认的最小答案数
 #pass_filter 是question必须满足的条件,满足则写入
-def extract(fn,target,question_format,min_answer_count=3,pass_filter=None):
+def extract(fn,target,question_format,min_answer_count=3,pass_filter=None,store_file=None):
 
     #开文件
     f = open(fn)
@@ -88,6 +89,8 @@ def extract(fn,target,question_format,min_answer_count=3,pass_filter=None):
     #indx是文件的行号
     indx,question_indx = 0,1
     title,nbest,answer_count,author = "",[],-1,""
+
+    store = []
 
     line = f.readline()
 
@@ -125,6 +128,8 @@ def extract(fn,target,question_format,min_answer_count=3,pass_filter=None):
                    pass_filter(m_question):
                     question_indx += 1
                     t.write(question_format(m_question))
+                    if store_file != None:
+                        store.append(m_question)
                 
                     if question_indx % 100 == 0:
                         print("question indx",question_indx)
@@ -164,7 +169,11 @@ def extract(fn,target,question_format,min_answer_count=3,pass_filter=None):
     if m_question.get_count() > min_answer_count and \
        pass_filter(m_question):
         t.write(question_format(m_question))
-            
+
+    if store_file != None:
+        t = open(store_file,"wb")
+        pickle.dump(store,t,True)
+        
 def extract_title(tquestion):
     return tquestion.get_title()+"\n"
 
@@ -227,12 +236,14 @@ def main():
     
     parser = OptionParser()  
     parser.add_option("-t", "--task",dest="task",default="error",help="你需要选择哪个任务")
+    parser.add_option("-s", "--store",dest="store",action="store_true",help="选择存储与否",default=False)
 
 
     #分析命令行参数
     (options, args) = parser.parse_args()
 
     #检查错误
+    print(options)
     if options.task == "error":
         print("请选择任务")
         sys.exit(1)
@@ -248,7 +259,10 @@ def main():
 
     
     #进行抽取
-    extract(qconf["computer_pos"],extract_file,task_function,min_answer_count=10,pass_filter=word_counts_filter)
+    store = None
+    if options.store == True:
+        store = qconf["filter_qa"]
+    extract(qconf["car_pos"],extract_file,task_function,min_answer_count=10,pass_filter=word_counts_filter,store_file=store)
         
 if __name__ == '__main__':
     main()

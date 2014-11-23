@@ -120,6 +120,7 @@ class OnlySynExpansioner(abstract_entity_expansioner):
         
         #1. 记录当前的实体数量
         previous_entity_length = len(base_entity)
+        print(base_entity)
 
         #2. expand_entity初始化设为base_entity
         expand_entity = base_entity.copy()
@@ -139,7 +140,7 @@ class OnlySynExpansioner(abstract_entity_expansioner):
                 #合并
                 expand_entity = expand_entity.union(temp_expand_entity)
                 
-            print("level %s : %s "%(indx,expand_entity))
+            print("level %s , length %s : %s "%(indx,len(expand_entity),expand_entity))
             indx += 1    
             #扩展的集合体积没有增长, 则说明循环结束, 跳出循环, 如不然则重新赋值
             if len(expand_entity) == previous_expand_entity:

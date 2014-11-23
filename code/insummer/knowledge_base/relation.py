@@ -44,6 +44,7 @@ class relation_tool:
     def __init__(self):
         #包含synonym,DefinedAs,DerivedFrom
         self.__synonym_type = {12,14,18}
+        #self.__synonym_type = {12,14}
 
 
 
