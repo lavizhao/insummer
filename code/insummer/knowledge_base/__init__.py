@@ -3,13 +3,19 @@
 '''
 
 from ..util import NLP
+from ..read_conf import config
 from conceptnet5.query import lookup
 from conceptnet5.query import field_match
 import sys
+import pickle
 
 SMALL = 1e-6
 
 nlp = NLP()
+
+#读入词表indx
+entity_list_file = open(config("../../conf/cn_data.conf")["entity_name"],'rb')
+entity_indx = pickle.load(entity_list_file)
 
 #定义与概念相关的常用函数集
 class concept_tool(object):
@@ -52,7 +58,7 @@ class concept_tool(object):
             return entity[:suffix]
         
     #这个函数的作用是检测概念是否在conceptNet中,如果在则返回true, 如果不在返回false
-    def conceptnet_has_concept(self,concept):
+    def conceptnet_has_concept_sqlite(self,concept):
         ans1 = lookup('/c/en/'+concept)
         indx = 0
         for item in ans1:
@@ -64,8 +70,11 @@ class concept_tool(object):
             return True
 
         return False
-        
 
+    #这个是改进版本的查找实体函数, 主要是把索引单独拿出来存到内存了, 效率提高了10倍
+    def conceptnet_has_concept(self,concept):
+        return concept in entity_indx
+        
 #试验品
 class NaiveAccocSpaceWrapper(object):
     def __init__(self,path,finder):

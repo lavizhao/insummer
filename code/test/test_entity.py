@@ -24,10 +24,13 @@ finder = NgramEntityFinder
 
 if __name__ == '__main__':
 
-    for i in range(len(questions)):
+    #for i in range(len(questions)):
+    for i in range(40):
+        print(i)
         q = questions[i]
         ose = OnlySynExpansioner(q,finder,max_level=2)
         ose.run()
+        #ose.construct_sentence_entity()
         print(100*"-")
     #ose.construct_sentence_entity()
     #ose.print_sentence_entity()

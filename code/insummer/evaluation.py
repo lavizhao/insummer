@@ -17,5 +17,11 @@ def bias_overlap_ratio(set1,set2):
         return 0
 
     return len(set1.intersection(set2)) / len(set2)
-    
+
+#实体重合数量    
+def bias_overlap_quantity(set1,set2):
+    if len(set1)==0 or len(set2)==0:
+        return 0
+
+    return len(set1.intersection(set2))
 

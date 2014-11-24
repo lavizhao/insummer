@@ -10,6 +10,8 @@ from insummer.read_conf import config
 from insummer.knowledge_base import concept_tool
 from insummer.knowledge_base.relation import relation_tool
 
+import pickle
+
 
 #others
 import csv
@@ -98,8 +100,9 @@ def entity_list_post_function(result,store_file):
 
     print("entity list %s"%(len(entity_list)))
 
-    for cp in entity_list:
-        store_file.write("%s\n"%(cp))    
+    #for cp in entity_list:
+    #    store_file.write("%s\n"%(cp))
+    pickle.dump(entity_list,store_file,True)
 
 #这个函数是所有task选参数            
 def opt(task):
@@ -137,7 +140,7 @@ def main():
     function_list = opt(options.task)
 
     if options.store == True:
-        store_file = open(store_pos,"w")
+        store_file = open(store_pos,"wb")
         
     iter_data(function_list,display=options.display,store=options.store,store_file=store_file)
         

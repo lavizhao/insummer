@@ -10,7 +10,7 @@ from ..common_type import Question
 from ..util import NLP
 from .entity_finder import NgramEntityFinder
 from ..knowledge_base.entity_lookup import ConceptnetEntityLookup
-from ..evaluation import bias_overlap_ratio
+from ..evaluation import bias_overlap_ratio,bias_overlap_quantity
 
 nlp = NLP()
 searcher = ConceptnetEntityLookup()
@@ -88,28 +88,46 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
     def expand(self):
         pass
 
+
+    #各个句子的平均实体数目
+    def average_sentence_entity(self):
+        #句子数目
+        sentence_num = len(self.__sentence_entity)
+
+        entity_num = 0
+        for sentence,entity in self.__sentence_entity:
+            entity_num += len(entity)
+
+        return entity_num/sentence_num
         
     #评价实体扩充的好坏, 这个方法因为不唯一, 所以也有可能扩充到好几个方法
     #expand terms是一个set
     #另一个现有的数据是self.__sentence_entity, 因为可以直接访问到, 所以不会另建一个
-    def evaluation(self,expand_terms):
-        #print(self.__sentence_total_entity)
-        return bias_overlap_ratio(expand_terms,self.__sentence_total_entity)
+    def evaluation(self,expand_terms,display=False):
+        set1,set2 = expand_terms,self.__sentence_total_entity
+        
+        print("实体命中数目 : %s"%(bias_overlap_quantity(set1,set2)))
+        print("实体命中率 : %s"%(bias_overlap_ratio(set1,set2)))
+        print("答案实体总数目 : %s"%(len(set2)))
+        print("句子数目 : %s"%(len(self.__sentence_entity)))
+        print("句子平均实体数 :%s"%(self.average_sentence_entity()))
+        print("实体重合样本 : %s "%(set1.intersection(set2)))
+
+        return bias_overlap_ratio(set1,set2),bias_overlap_quantity(set1,set2)
         
     #主体调用的函数
     #先把句子中所有的实体都抽出来
     #再进行实体扩展, 然后进行评价
-    def run(self):
+    def run(self,display=False):
         #抽取答案句子中的所有实体
         self.construct_sentence_entity()
 
         #扩展实体
-        expand_terms = self.expand()
+        expand_terms = self.expand(display)
 
         #评价,这个还没有弄
-        result = self.evaluation(expand_terms)
+        return self.evaluation(expand_terms)
 
-        print("====",result)
     
 #这个算法只扩展同义词类
 class OnlySynExpansioner(abstract_entity_expansioner):
@@ -141,7 +159,7 @@ class OnlySynExpansioner(abstract_entity_expansioner):
         #1. 记录当前的实体数量
         previous_entity_length = len(base_entity)
         if display:
-            print(base_entity)
+            print("句子实体 : %s"%(base_entity))
 
         #2. expand_entity初始化设为base_entity
         expand_entity = base_entity.copy()
