@@ -50,6 +50,9 @@ class ConceptnetEntityLookup(abstract_entity_lookup):
 
     def lookup_entity_with_reltype(self,entity,reltype,other_limit=None):
 
+        #raw_entity是原来的实体
+        raw_entity = entity    
+
         #先加个前缀
         entity = cn_tool.add_prefix(entity)
 
@@ -60,7 +63,7 @@ class ConceptnetEntityLookup(abstract_entity_lookup):
             start = edge['start']
             end = edge['end']
             rel = edge['rel']
-            neighbour = start if end==entity else end
+            neighbour = start if cn_tool.entity_equal(end,entity) else end
 
             if reltype(rel) :
                 if other_limit != None :

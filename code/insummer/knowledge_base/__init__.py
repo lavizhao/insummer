@@ -24,6 +24,14 @@ class concept_tool(object):
         return self.is_english_concept(cp1) and \
             self.is_english_concept(cp2)
 
+    def entity_equal(self,cp1,cp2):
+        cp1 = self.concept_name(cp1)
+        cp2 = self.concept_name(cp2)
+        if cp1 == cp2:
+            return True
+        else:
+            return False
+        
     #给concept加/c/en
     def add_prefix(self,entity):
         cp = '/c/en/'+entity if not entity.startswith('/c/en/') else entity
