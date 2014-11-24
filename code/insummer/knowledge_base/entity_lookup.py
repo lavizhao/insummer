@@ -50,21 +50,21 @@ class ConceptnetEntityLookup(abstract_entity_lookup):
 
     def lookup_entity_with_reltype(self,entity,reltype,other_limit=None):
 
-        #raw_entity是原来的实体
-        raw_entity = entity    
-
         #先加个前缀
         entity = cn_tool.add_prefix(entity)
 
         result = []
         
-        #然后查找一下关系
+        #对于能查到的每个结构关系
         for edge in self.cn_finder.lookup(entity):
-            start = edge['start']
-            end = edge['end']
-            rel = edge['rel']
+            #获得三元组
+            start,end,rel = edge['start'],edge['end'],edge['rel']
+
+            #如果实体==end,则neighbour=start, 反之=end
+            #这个实体相等是可以自动去前后缀的
             neighbour = start if cn_tool.entity_equal(end,entity) else end
 
+            #如果满足某个条件
             if reltype(rel) :
                 if other_limit != None :
                     if other_limit(start,end,rel,entity):
@@ -73,6 +73,7 @@ class ConceptnetEntityLookup(abstract_entity_lookup):
                 else:
                     result.append(neighbour)
 
+        #重新去一遍前后缀
         result = self.remove_prefix_suffix(result)                    
         return result
 

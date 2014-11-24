@@ -118,10 +118,12 @@ class OnlySynExpansioner(abstract_entity_expansioner):
         abstract_entity_expansioner.__init__(self,mquestion,entity_finder)
         self.level = max_level
 
-    #扩展
-    def expand(self):
+    #扩展, display属性可以打印部分有用的东西
+    def expand(self,display=False):
+        #获取标题
         title = self.get_title()
 
+        #基实体集初始化
         base_entity = set()
 
         #先抽取问题的实体
@@ -138,7 +140,8 @@ class OnlySynExpansioner(abstract_entity_expansioner):
         
         #1. 记录当前的实体数量
         previous_entity_length = len(base_entity)
-        #print(base_entity)
+        if display:
+            print(base_entity)
 
         #2. expand_entity初始化设为base_entity
         expand_entity = base_entity.copy()
