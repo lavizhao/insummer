@@ -3,6 +3,7 @@
 '''
 作用:遍历文件得到想要的输出
 '''
+import csv
 import sys
 sys.path.append("..")
 import insummer
@@ -12,6 +13,7 @@ from insummer.knowledge_base.relation import relation_tool
 
 import pickle
 
+from abc import ABCMeta, abstractmethod
 
 #others
 import csv
@@ -20,7 +22,6 @@ from optparse import OptionParser
 conf = config("../../conf/cn_data.conf")
 
 data_pos = conf["csv_pos"]
-store_pos = conf["entity_name"]
 
 part = [i for i in range(0,8)]
 
@@ -42,25 +43,25 @@ def get_ipart_handler(i):
 
 
 #三元组的限制
-def common_criterion(rel,cp1,cp2):
+def common_criterion(line):
+    rel,cp1,cp2,weight = line[1],line[2],line[3],line[5]    
     if cn_tool.is_english_concept(cp1) and \
        cn_tool.is_english_concept(cp2) and \
-       rel_tool.is_relation(rel):
+       rel_tool.is_relation(rel) and \
+       float(weight) >0 and rel_tool.is_pos(rel):
         return True
 
     else:
         return False
 
 #这个是观察结构用的
-def common_print(rel,cp1,cp2):
+def common_print(line):
+    rel,cp1,cp2 = line[1],line[2],line[3]    
     rel_name = rel_tool.rel_name(rel)
     if rel_name == 'HasProperty':
         print("%20s%40s%40s"%(rel_name,cp1,cp2))
-
-
     
-def iter_data(function_list,store=False,display=False,store_file=None):
-    triple_criterion,print_function,store_function,post_processing = function_list
+def iter_data(func,store=False,display=False):
     result = []
     indx = 0
 
@@ -71,52 +72,127 @@ def iter_data(function_list,store=False,display=False,store_file=None):
         reader = get_ipart_handler(ipart)
 
         for line in reader:
-            rel,cp1,cp2 = line[1],line[2],line[3]
             #如果满足限制条件
-            if triple_criterion(rel,cp1,cp2):
+            if func.get_triple_criterion()(line):
 
                 if display == True:
-                    print(print_function(rel,cp1,cp2))
+                    print(func.get_print_function()(line))
 
                 if store == True:
-                    result.append(store_function(rel,cp1,cp2))
+                    result.append(func.get_store_function()(line))
 
                 indx += 1
                 if indx %10000 == 0:
                     print(indx)
 
     if store==True:
-        post_processing(result,store_file)
+        func.get_post_processing()(result)
 
 
-def entity_list_store_function(rel,cp1,cp2):
-    return [cn_tool.concept_name(cp1),cn_tool.concept_name(cp2)]
+class abstract_func(metaclass=ABCMeta):
+    def __init__(self,store):
+        self.__store = store
 
-def entity_list_post_function(result,store_file):
-    entity_list = set()
-    for cp1,cp2 in result:
-        entity_list.add(cp1)
-        entity_list.add(cp2)
+    def is_store(self):
+        return self.__store
+        
+    def get_print_function(self):
+        return self.print_function
 
-    print("entity list %s"%(len(entity_list)))
+    def get_triple_criterion(self):
+        return self.triple_criterion
 
-    #for cp in entity_list:
-    #    store_file.write("%s\n"%(cp))
-    pickle.dump(entity_list,store_file,True)
+    def get_store_function(self):
+        return self.store_function
 
+    def get_post_processing(self):
+        return self.post_processing
+
+    @abstractmethod
+    def print_function(self,line):
+        pass
+
+    @abstractmethod
+    def triple_criterion(self,line):
+        pass
+
+    @abstractmethod
+    def store_function(self,line):
+        pass
+
+    @abstractmethod
+    def post_processing(self,result):
+        pass
+        
+class entity_list_func(abstract_func):
+    def __init__(self,store):
+        abstract_func.__init__(self,store)
+        self.__name = "entity_list"
+        
+    def print_function(self,line):
+        return common_print(line)
+
+    def triple_criterion(self,line):
+        return common_criterion(line)
+
+    def store_function(self,line):
+        rel,cp1,cp2 = line[1],line[2],line[3]    
+        return [cn_tool.concept_name(cp1),cn_tool.concept_name(cp2)]
+
+    def post_processing(self,result):
+        if self.is_store()==False:
+            return
+            
+        store_file = open(conf[self.__name],"wb")    
+        entity_list = set()
+        for cp1,cp2 in result:
+            entity_list.add(cp1)
+            entity_list.add(cp2)
+
+        print("entity list %s"%(len(entity_list)))
+
+        #for cp in entity_list:
+        #    store_file.write("%s\n"%(cp))
+        pickle.dump(entity_list,store_file,True)
+
+class copy_data(abstract_func):
+    def __init__(self,store):
+        abstract_func.__init__(self,store)
+        self.__name = "copy_data"
+        store_file = open(conf[self.__name],"w")
+        self.writer = csv.writer(store_file)
+        
+    def print_function(self,line):
+        return common_print(line)
+
+    def triple_criterion(self,line):
+        return common_criterion(line)
+
+    def store_function(self,line):
+        rel,cp1,cp2,weight=line[1],line[2],line[3],line[5]
+        
+        rel = rel_tool.rel_name(rel)
+        cp1,cp2 = cn_tool.concept_name(cp1),cn_tool.concept_name(cp2)
+        
+        
+        result = [rel,cp1,cp2,weight]    
+        self.writer.writerow(result)
+        return 1
+
+    def post_processing(self,result):
+        return 
+        
 #这个函数是所有task选参数            
-def opt(task):
+def opt(task,store):
     if task == "entity_list":
-        triple_criterion = common_criterion
-        print_function = common_print
-        store_function = entity_list_store_function
-        post_processing = entity_list_post_function
+        return entity_list_func(store)
 
+    elif task == "copy_data":
+        return copy_data(store)
+        
     else:
         print("error")
         sys.exit(1)
-
-    return [triple_criterion,print_function,store_function,post_processing]
 
 def main():
     '''
@@ -137,12 +213,9 @@ def main():
         print("请选择任务")
         sys.exit(1)
 
-    function_list = opt(options.task)
+    func = opt(options.task,options.store)
 
-    if options.store == True:
-        store_file = open(store_pos,"wb")
-        
-    iter_data(function_list,display=options.display,store=options.store,store_file=store_file)
+    iter_data(func=func,display=options.display,store=options.store)
         
 #这个就不用其他功能了, 省得弄得非常蛋疼    
 if __name__ == '__main__':
