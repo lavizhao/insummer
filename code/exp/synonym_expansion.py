@@ -42,5 +42,5 @@ def exp(qnum):
 if __name__ == '__main__':
     print(__doc__)
 
-    exp(40)
+    exp(300)
 

@@ -8,7 +8,7 @@ import insummer
 
 from insummer.knowledge_base.entity_lookup import ConceptnetEntityLookup
 from insummer.knowledge_base import concept_tool
-from insummer.query_expansion.entity_expansioner import OnlySynExpansioner
+from insummer.query_expansion.entity_expansioner import OnlySynExpansioner,SynRelateExpansioner
 from insummer.common_type import Question
 from insummer.query_expansion.entity_finder import example_entity_finder,NgramEntityFinder
 
@@ -25,11 +25,12 @@ finder = NgramEntityFinder
 if __name__ == '__main__':
 
     #for i in range(len(questions)):
-    for i in range(40):
+    for i in range(2):
         print(i)
         q = questions[i]
-        ose = OnlySynExpansioner(q,finder,max_level=2)
-        ose.run()
+        #exp = OnlySynExpansioner(q,finder,max_level=2,display=True)
+        exp = SynRelateExpansioner(q,finder,max_level=2,display=True)
+        exp.run()
         #ose.construct_sentence_entity()
         print(100*"-")
     #ose.construct_sentence_entity()

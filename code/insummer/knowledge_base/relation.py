@@ -45,7 +45,7 @@ class relation_tool:
         #包含synonym,DefinedAs,DerivedFrom
         self.__synonym_type = {12,14,18}
         #self.__synonym_type = {12,14}
-
+        self.__relate_type = {0}
 
 
     def is_relation(self,rel):
@@ -81,7 +81,11 @@ class relation_tool:
     #同义词关系函数
     def synonym_type(self,rel):
         return self.get_rel_type(rel,self.__synonym_type)
-    
+
+    #关联关系
+    def relate_type(self,rel):
+        return self.get_rel_type(rel,self.__relate_type)
+        
 rel_tool = relation_tool()
 
             

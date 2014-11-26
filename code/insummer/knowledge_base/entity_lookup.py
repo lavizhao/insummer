@@ -89,6 +89,7 @@ class ConceptnetEntityLookup(abstract_entity_lookup):
 
         return result
 
-
-
-    
+    #关联关系
+    def relate_entity(self,entity):
+        result = self.lookup_entity_with_reltype(entity,rel_tool.relate_type,common_limit)
+        return result
