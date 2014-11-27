@@ -25,7 +25,7 @@ finder = NgramEntityFinder
 if __name__ == '__main__':
 
     #for i in range(len(questions)):
-    for i in range(2):
+    for i in range(20):
         print(i)
         q = questions[i]
         #exp = OnlySynExpansioner(q,finder,max_level=2,display=True)

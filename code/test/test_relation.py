@@ -7,6 +7,7 @@ from insummer.read_conf import config
 from insummer.knowledge_base import concept_tool
 from insummer.knowledge_base.relation import relation_tool
 from insummer.evaluation import overlap_ratio,bias_overlap_ratio
+from insummer.knowledge_base.entity_lookup import InsunnetEntityLookup
 
 rel_tool = relation_tool()
 
@@ -20,3 +21,8 @@ if __name__ == '__main__':
     a,b = set([1,2,3]),set([2,3,4])
     print(overlap_ratio(a,b))
     print(bias_overlap_ratio(a,b))
+
+    print("entity lookup")
+
+    iel = InsunnetEntityLookup()
+    print(iel.synonym_entity("pollute"))

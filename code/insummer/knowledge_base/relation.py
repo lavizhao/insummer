@@ -56,11 +56,14 @@ class relation_tool:
         return not rel.startswith('Not')
 
     def rel_name(self,rel):
-        assert self.is_relation(rel)
-        if self.is_pos(rel):
-            return rel[3:]
+        #assert self.is_relation(rel)
+        if rel.startswith('/r'):
+            if self.is_pos(rel):
+                return rel[3:]
+            else:
+                return rel[6:]
         else:
-            return rel[6:]
+            return rel    
 
     def get_rel_indx(self,rel_name):
         indx = -1

@@ -9,11 +9,11 @@ from abc import ABCMeta, abstractmethod
 from ..common_type import Question
 from ..util import NLP
 from .entity_finder import NgramEntityFinder
-from ..knowledge_base.entity_lookup import ConceptnetEntityLookup
+from ..knowledge_base.entity_lookup import ConceptnetEntityLookup,InsunnetEntityLookup
 from ..evaluation import bias_overlap_ratio,bias_overlap_quantity
 
 nlp = NLP()
-searcher = ConceptnetEntityLookup()
+searcher = InsunnetEntityLookup()#ConceptnetEntityLookup()
 
 #定义抽象类
 #这个类是实体扩展的类,主要功能是
@@ -160,8 +160,8 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
         
         #1. 记录当前的实体数量
         previous_entity_length = len(base_entity)
-        if self.display:
-            print("句子实体 : %s"%(base_entity))
+        #if self.display:
+        #    print("句子实体 : %s"%(base_entity))
 
         #2. expand_entity初始化设为base_entity
         expand_entity = base_entity.copy()

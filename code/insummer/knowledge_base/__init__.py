@@ -2,6 +2,7 @@
 这个模块的作用主要是封装KB的一些功能,变相做接口了
 '''
 
+import pymongo
 from ..util import NLP
 from ..read_conf import config
 from conceptnet5.query import lookup
@@ -16,7 +17,8 @@ nlp = NLP()
 #读入词表indx
 entity_list_file = open(config("../../conf/cn_data.conf")["entity_name"],'rb')
 entity_indx = pickle.load(entity_list_file)
-
+        
+        
 #定义与概念相关的常用函数集
 class concept_tool(object):
     def __init__(self):
@@ -44,7 +46,8 @@ class concept_tool(object):
         return cp
 
     def concept_name(self,entity):
-        #去前缀    
+        #去前缀
+        entity = str(entity)
         if entity.startswith('/c/en/'):
             entity = entity[6:]
         else:
@@ -161,3 +164,23 @@ def init_assoc_space():
 
 cp_tool = concept_tool()
 conceptnet_has_concept = cp_tool.conceptnet_has_concept
+
+class InsunnetFinder:
+    def __init__(self):
+        self.__usr = 'root'
+        self.__pwd = ''
+        conn = pymongo.Connection('localhost',27017)
+        self.__db = conn.insunnet
+        self.tbl = self.__db.assertion
+
+    def lookup(self,entity):
+        entity = cp_tool.concept_name(entity)
+        
+        result1 = list(self.tbl.find({'start':entity}))
+        result2 = list(self.tbl.find({'end':entity}))
+        
+        result1.extend(result2)
+
+        return result1
+
+        
