@@ -47,26 +47,35 @@ class relation_tool:
         #self.__synonym_type = {12,14}
         self.__relate_type = {0}
 
-
+    #检测概念是否是关系
+    
     def is_relation(self,rel):
-        return rel.startswith('/r/')
+        rel = self.rel_name(rel)
+        if rel == 'other':
+            return False
+        return rel in REL_INDX.keys()
 
+    #是不是positive
     def is_pos(self,rel):
-        rel = rel[3:]
-        return not rel.startswith('Not')
+        assert self.is_relation(rel)
+        if rel.startswith('/r'):
+            rel = rel[3:]
+            return not rel.startswith('Not')
+        else:
+            assert self.is_relation(rel)
+            return True
 
     def rel_name(self,rel):
-        #assert self.is_relation(rel)
-        if rel.startswith('/r'):
-            if self.is_pos(rel):
-                return rel[3:]
-            else:
-                return rel[6:]
+        if rel.startswith('/r/Not'):
+            return rel[6:]
+        elif rel.startswith('/r'):
+            return rel[3:]
         else:
             return rel    
 
     def get_rel_indx(self,rel_name):
         indx = -1
+        rel_name = self.rel_name(rel_name)
         if rel_name in REL_INDX:
             return REL_INDX[rel_name]
         else:

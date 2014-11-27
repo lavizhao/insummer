@@ -20,13 +20,17 @@ entity_indx = pickle.load(entity_list_file)
         
         
 #定义与概念相关的常用函数集
+#这里要考虑两种情况conceptnet默认的是带/c 的, 而我自己写的不带
 class concept_tool(object):
     def __init__(self):
         pass
 
     def is_english_concept(self,cp):
-        #assert cp.startswith('/c')
-        return cp.startswith('/c/en/')
+        cp = str(cp)
+        if cp.startswith('/c'):
+            return cp.startswith('/c/en/')
+        else:
+            return True
 
     def both_english_concept(self,cp1,cp2):
         return self.is_english_concept(cp1) and \
@@ -42,7 +46,8 @@ class concept_tool(object):
         
     #给concept加/c/en
     def add_prefix(self,entity):
-        cp = '/c/en/'+entity if not entity.startswith('/c/en/') else entity
+        cp = self.concept_name(entity)
+        cp = '/c/en/'+cp
         return cp
 
     def concept_name(self,entity):
@@ -50,6 +55,9 @@ class concept_tool(object):
         entity = str(entity)
         if entity.startswith('/c/en/'):
             entity = entity[6:]
+        elif entity.startswith('/c'):
+            #如果是其他语言, 那么返回一个在数据库中没有的
+            return 'wojiaozhaoximo'
         else:
             entity = entity
 
@@ -59,9 +67,10 @@ class concept_tool(object):
             return entity
         else:
             return entity[:suffix]
-        
+
+    ###这个函数已经不用了
     #这个函数的作用是检测概念是否在conceptNet中,如果在则返回true, 如果不在返回false
-    def conceptnet_has_concept_sqlite(self,concept):
+    def __conceptnet_has_concept_sqlite(self,concept):
         ans1 = lookup('/c/en/'+concept)
         indx = 0
         for item in ans1:
@@ -77,6 +86,11 @@ class concept_tool(object):
     #这个是改进版本的查找实体函数, 主要是把索引单独拿出来存到内存了, 效率提高了10倍
     def conceptnet_has_concept(self,concept):
         return concept in entity_indx
+
+    #换了个名字,检测kb中是否有概念
+    def kb_has_concept(self,concept):
+        cp = self.concept_name(concept)
+        return cp in entity_indx
         
 #试验品
 class NaiveAccocSpaceWrapper(object):
@@ -99,7 +113,7 @@ class NaiveAccocSpaceWrapper(object):
 
     @staticmethod
     def passes_filter(label, filter):
-        if filter is None:
+        if filter == None:
             return True
         else:
             return field_match(label, filter)
@@ -163,7 +177,6 @@ def init_assoc_space():
     
 
 cp_tool = concept_tool()
-conceptnet_has_concept = cp_tool.conceptnet_has_concept
 
 class InsunnetFinder:
     def __init__(self):

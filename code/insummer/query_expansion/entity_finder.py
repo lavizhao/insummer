@@ -12,9 +12,11 @@
 from abc import ABCMeta, abstractmethod
 from conceptnet5.language.english import normalize
 from ..util import NLP
-from ..knowledge_base import conceptnet_has_concept
+from ..knowledge_base import concept_tool
 
 nlp = NLP()
+cn_tool = concept_tool()
+in_kb = cn_tool.kb_has_concept
 
 class abstract_entity_finder(metaclass=ABCMeta):
 
@@ -135,20 +137,20 @@ class NgramEntityFinder(abstract_entity_finder):
         return t1+'+'+t2
 
     def add_both(self,word1,word2,word12,cand):
-        if word12 not in cand and conceptnet_has_concept(word12) :
+        if word12 not in cand and in_kb(word12) :
             cand.add(word12)
         else:
-            if word1 not in cand and conceptnet_has_concept(word1) :
+            if word1 not in cand and in_kb(word1) :
                 cand.add(word1)
-            if word2 not in cand and conceptnet_has_concept(word2) :
+            if word2 not in cand and in_kb(word2) :
                 cand.add(word2)
 
     def add_first(self,word1,cand):
-        if word1 not in cand and conceptnet_has_concept(word1) :
+        if word1 not in cand and in_kb(word1) :
             cand.add(word1)
 
     def add_last(self,word2,cand):
-        if word2 not in cand and conceptnet_has_concept(word2) :
+        if word2 not in cand and in_kb(word2) :
             cand.add(word2)
             
     def process_condition(self,word1,word2,word12,cand,condition):
