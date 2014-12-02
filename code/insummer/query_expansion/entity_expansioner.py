@@ -93,6 +93,19 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
         pass
 
 
+    #命中句子个数
+    def hit_sentence(self,expand_terms):
+        result = 0
+        for sentence,entities in self.__sentence_entity:
+            hit = 0
+            for entity in entities:
+                if entity in expand_terms:
+                    hit += 1
+            if hit >= 4:
+                result += 1
+        return result
+                
+        
     #各个句子的平均实体数目
     def average_sentence_entity(self):
         #句子数目
@@ -109,12 +122,15 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
     #另一个现有的数据是self.__sentence_entity, 因为可以直接访问到, 所以不会另建一个
     def evaluation(self,expand_terms):
         set1,set2 = expand_terms,self.__sentence_total_entity
-        
+
+        print("扩展实体个数: %s"%(len(set1)))
         print("实体命中数目 : %s"%(bias_overlap_quantity(set1,set2)))
         print("实体命中率 : %s"%(bias_overlap_ratio(set1,set2)))
         print("答案实体总数目 : %s"%(len(set2)))
         print("句子数目 : %s"%(len(self.__sentence_entity)))
         print("句子平均实体数 :%s"%(self.average_sentence_entity()))
+        print("命中句子个数 :%s"%(self.hit_sentence(set1)))
+        print("问题实体 :%s"%(self.title_entity()))
         print("实体重合样本 : %s "%(set1.intersection(set2)))
 
         return bias_overlap_ratio(set1,set2),bias_overlap_quantity(set1,set2)

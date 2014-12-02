@@ -3,7 +3,7 @@
 import sys
 sys.path.append("..")
 import insummer
-from insummer.knowledge_base import concept_tool
+from insummer.knowledge_base import concept_tool,init_assoc_space,NaiveAccocSpaceWrapper
 from insummer.knowledge_base.relation import relation_tool
 
 import unittest
@@ -147,6 +147,14 @@ class test(unittest.TestCase):
 
         rel5 = 'fuck'
         self.assertEqual(self.re.synonym_type(rel5),False)
+
+    def testNeigh(self):
+        cp1 = 'sex'
+        cp2 = 'love'
+        print(self.cn.concept_similarity(cp1,cp2))
+        sb = init_assoc_space()
+        cp1,cp2 = self.cn.add_prefix(cp1),self.cn.add_prefix(cp2)
+        print(sb.sim(cp1,cp2))
         
 if __name__ == '__main__':
     unittest.main()

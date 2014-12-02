@@ -9,6 +9,7 @@ from conceptnet5.query import lookup
 from conceptnet5.query import field_match
 import sys
 import pickle
+import time
 
 SMALL = 1e-6
 
@@ -18,12 +19,29 @@ nlp = NLP()
 entity_list_file = open(config("../../conf/cn_data.conf")["entity_name"],'rb')
 entity_indx = pickle.load(entity_list_file)
         
+class InsunnetFinder:
+    def __init__(self):
+        self.__usr = 'root'
+        self.__pwd = ''
+        conn = pymongo.Connection('localhost',27017)
+        self.__db = conn.insunnet
+        self.tbl = self.__db.assertion
+
+    def lookup(self,entity):
+        entity = cp_tool.concept_name(entity)
         
+        result1 = list(self.tbl.find({'start':entity}))
+        result2 = list(self.tbl.find({'end':entity}))
+        
+        result1.extend(result2)
+
+        return result1
+
 #定义与概念相关的常用函数集
 #这里要考虑两种情况conceptnet默认的是带/c 的, 而我自己写的不带
 class concept_tool(object):
     def __init__(self):
-        pass
+        self.finder = InsunnetFinder()
 
     def is_english_concept(self,cp):
         cp = str(cp)
@@ -91,7 +109,41 @@ class concept_tool(object):
     def kb_has_concept(self,concept):
         cp = self.concept_name(concept)
         return cp in entity_indx
+
+    #某个节点的所有邻居
+    def neighbours(self,cp):
+        cp = self.concept_name(cp)
+        edges = self.finder.lookup(cp)
+        result = []
+        for edge in edges:
+            start,end,rel = edge['start'],edge['end'],edge['rel']
+
+            if not self.entity_equal(start,cp):
+                result.append(start)
+
+            if not self.entity_equal(start,cp):
+                result.append(end)
+
+        return set(result)
         
+    #计算实体相似度
+    def concept_similarity(self,cp1,cp2):
+        cp1,cp2 = self.concept_name(cp1),self.concept_name(cp2)
+
+        #如果有一个不在知识库中,则返回-1
+        if not self.kb_has_concept(cp1) or not self.kb_has_concept(cp2):
+            return -1
+
+        #返回节点的邻居
+        n1 = self.neighbours(cp1)
+        n2 = self.neighbours(cp2)
+
+        if len(n1) == 0 or len(n2) == 0:
+            return 0
+        
+        return len(n1.intersection(n2)) / \
+            min(len(n1),len(n2))
+            
 #试验品
 class NaiveAccocSpaceWrapper(object):
     def __init__(self,path,finder):
@@ -165,6 +217,10 @@ class NaiveAccocSpaceWrapper(object):
         ][:limit]
         return similar
 
+    def sim(self,t1,t2):
+        self.load()    
+        return self.assoc.assoc_between_two_terms(t1,t2)
+        
 def init_assoc_space():
     assoc_space_dir = '/home/lavi/.conceptnet5/assoc/assoc-space-5.3'
     
@@ -178,22 +234,3 @@ def init_assoc_space():
 
 cp_tool = concept_tool()
 
-class InsunnetFinder:
-    def __init__(self):
-        self.__usr = 'root'
-        self.__pwd = ''
-        conn = pymongo.Connection('localhost',27017)
-        self.__db = conn.insunnet
-        self.tbl = self.__db.assertion
-
-    def lookup(self,entity):
-        entity = cp_tool.concept_name(entity)
-        
-        result1 = list(self.tbl.find({'start':entity}))
-        result2 = list(self.tbl.find({'end':entity}))
-        
-        result1.extend(result2)
-
-        return result1
-
-        

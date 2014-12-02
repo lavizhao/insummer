@@ -43,9 +43,10 @@ REL_INDX = {\
 class relation_tool:
     def __init__(self):
         #包含synonym,DefinedAs,DerivedFrom
-        self.__synonym_type = {12,14,18}
-        #self.__synonym_type = {12,14}
-        self.__relate_type = {0}
+        self.__synonym_type = {12,14}
+        self.__relate_type = set(range(40))
+        #self.__relate_type = {0,1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,19,20}
+        self.__all_type = set(range(40))
 
     #检测概念是否是关系
     
@@ -97,6 +98,9 @@ class relation_tool:
     #关联关系
     def relate_type(self,rel):
         return self.get_rel_type(rel,self.__relate_type)
+
+    def all_type(self,rel):
+        return self.get_rel_type(rel,self.__all_type)
         
 rel_tool = relation_tool()
 

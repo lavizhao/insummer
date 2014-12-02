@@ -30,7 +30,7 @@ def exp(qnum):
     for i in range(qnum):
         print("问题 %s"%(i))
         q = questions[i]
-        ose = SynRelateExpansioner(q,finder,max_level=2,display=True)
+        ose = SynRelateExpansioner(q,finder,max_level=1,display=True)
         ratio,quantity = ose.run()
         tratio += ratio
         tquantity += quantity
@@ -42,5 +42,5 @@ def exp(qnum):
 if __name__ == '__main__':
     print(__doc__)
 
-    exp(500)
+    exp(100)
 

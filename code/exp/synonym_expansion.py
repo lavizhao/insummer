@@ -30,8 +30,8 @@ def exp(qnum):
     for i in range(qnum):
         print("问题 %s"%(i))
         q = questions[i]
-        ose = OnlySynExpansioner(q,finder,max_level=2)
-        ratio,quantity = ose.run(display=True)
+        ose = OnlySynExpansioner(q,finder,max_level=1,display=True)
+        ratio,quantity = ose.run()
         tratio += ratio
         tquantity += quantity
         print(100*"=")

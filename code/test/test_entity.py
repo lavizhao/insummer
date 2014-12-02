@@ -25,11 +25,11 @@ finder = NgramEntityFinder
 if __name__ == '__main__':
 
     #for i in range(len(questions)):
-    for i in range(20):
+    for i in range(1):
         print(i)
         q = questions[i]
         #exp = OnlySynExpansioner(q,finder,max_level=2,display=True)
-        exp = SynRelateExpansioner(q,finder,max_level=2,display=True)
+        exp = SynRelateExpansioner(q,finder,max_level=1,display=True)
         exp.run()
         #ose.construct_sentence_entity()
         print(100*"-")
