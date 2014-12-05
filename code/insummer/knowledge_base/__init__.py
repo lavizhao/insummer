@@ -11,6 +11,8 @@ import sys
 import pickle
 import time
 
+from math import log
+
 SMALL = 1e-6
 
 nlp = NLP()
@@ -37,6 +39,22 @@ class InsunnetFinder:
 
         return result1
 
+    def lookup_weight(self,ent1,ent2):
+        ent1 = cp_tool.concept_name(ent1)
+        ent2 = cp_tool.concept_name(ent2)
+
+        result1 = list(self.tbl.find({'start':ent1,'end':ent2}))
+        result2 = list(self.tbl.find({'start':ent2,'end':ent1}))
+
+        result = 0
+
+        if len(result1) == 0 and len(result2) == 0:
+            return 0
+        elif len(result1) != 0:
+            return float(result1[0]['weight'])
+        else:
+            return float(result2[0]['weight'])
+        
 #定义与概念相关的常用函数集
 #这里要考虑两种情况conceptnet默认的是带/c 的, 而我自己写的不带
 class concept_tool(object):
@@ -138,12 +156,20 @@ class concept_tool(object):
         n1 = self.neighbours(cp1)
         n2 = self.neighbours(cp2)
 
+        intersection = n1.intersection(n2)
+        union = n1.union(n2)
+
         if len(n1) == 0 or len(n2) == 0:
             return 0
-        
-        return len(n1.intersection(n2)) / \
-            min(len(n1),len(n2))
+
+        print(len(n1),len(n2),len(intersection),len(union))
             
+        #return len(n1.intersection(n2)) / min(len(n1),len(n2))
+        return 1 - (log(max(len(n1),len(n2))) - log(len(intersection)) ) / \
+            (log(len(union)) - log(min(len(n1),len(n2)))  ) 
+
+    def entity_strength(self,cp1,cp2):
+        return self.finder.lookup_weight(cp1,cp2)
 #试验品
 class NaiveAccocSpaceWrapper(object):
     def __init__(self,path,finder):

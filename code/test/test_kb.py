@@ -149,12 +149,16 @@ class test(unittest.TestCase):
         self.assertEqual(self.re.synonym_type(rel5),False)
 
     def testNeigh(self):
-        cp1 = 'sex'
-        cp2 = 'love'
+        cp1 = 'car'
+        cp2 = 'fuck'
         print(self.cn.concept_similarity(cp1,cp2))
         sb = init_assoc_space()
         cp1,cp2 = self.cn.add_prefix(cp1),self.cn.add_prefix(cp2)
         print(sb.sim(cp1,cp2))
+
+    def testN(self):
+        cp1 = 'car'
+        
         
 if __name__ == '__main__':
     unittest.main()

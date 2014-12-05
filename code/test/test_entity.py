@@ -4,6 +4,7 @@ import json
 import sys
 sys.path.append("..")
 import insummer
+import profile
 
 
 from insummer.knowledge_base.entity_lookup import ConceptnetEntityLookup
