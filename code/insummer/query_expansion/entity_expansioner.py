@@ -172,7 +172,7 @@ class noconstraints_entity_expansioner(abstract_entity_expansioner):
         print("句子平均实体数 :%s"%(self.average_sentence_entity()))
         print("命中句子个数 :%s"%(self.hit_sentence(set1)))
         print("问题实体 :%s"%(self.title_entity()))
-        #print("实体重合样本 : %s "%(set1.intersection(set2)))
+        print("实体重合样本 : %s "%(set1.intersection(set2)))
 
         return bias_overlap_ratio(set1,set2),bias_overlap_quantity(set1,set2),len(set1)
 
@@ -280,65 +280,173 @@ def get_weight2(ent1,ent2):
         return 0
 
         
-#这个方法先扩同义词, 然后pagerank
+#这个方法先扩同义词, 然后用rank(page rank 或者hits)
 class SynRankRelateExpansioner(noconstraints_entity_expansioner):
     
-    def __init__(self,mquestion,entity_finder,level1,level2,display):
+    def __init__(self,mquestion,entity_finder,level1,level2,display,rank_alg):
         noconstraints_entity_expansioner.__init__(self,mquestion,entity_finder,display)
         self.level1 = level1
         self.level2 = level2
         self.expand_rule1 = searcher.synonym_entity
         self.expand_rule2 = searcher.relate_entity
         self.__expand_entity = 0
+        self.rank_alg = rank_alg
 
+
+    def build_graph(self,entity):
+        gr = nx.Graph()
+        gr.add_nodes_from(entity)
+        node_pairs = list(itertools.combinations(entity,2))
+
+        for ent1,ent2 in node_pairs:
+            weight = get_weight2(ent1,ent2)
+            if weight > 0:
+                gr.add_edge(ent1,ent2,weight=weight)
+
+        return gr
+
+    def check_alg(self,alg):
+        alg_set = ['hits','pagerank']
+        if not alg in alg_set:
+            print("not found alg")
+            sys.exit(1)
+
+
+    #用page rank 得到同义实体的相似度
+    def pagerank(self,gr):
+        #去掉0初度的点, 防止pagerank报错
+        W = nx.DiGraph(gr)    
+        degree = W.out_degree(weight='weight')
+        for(u,v,d) in W.edges(data=True):
+            if degree[u] == 0:
+                try:
+                    gr.remove_node(u)
+                except:
+                    pass
+
+        base_entity = self.title_entity()
+        person = {}            
+        for ent in gr.nodes():
+            if ent in base_entity:
+                person[ent] = 1
+            else:
+                person[ent] = 0.5
+
+        pr = nx.pagerank_numpy(gr,weight='weight',alpha=0.8,personalization=person)#,max_iter=400)    
+
+        return pr
+
+
+    def hits(self,gr):
+        h,a = nx.hits(gr,max_iter = 300)
+        return h
+        
+    #得到过滤后的实体
+    def get_filter_entity(self,gr):
+        alg = self.rank_alg
+        #检查算法的合理性
+        self.check_alg(alg)
+
+        if alg == 'pagerank':
+            return self.pagerank(gr)
+        elif alg == 'hits':
+            return self.hits(gr)
+
+        else:
+            pass
+        
+        
     def expand(self):
         #基本实体    
         base_entity = self.title_entity()
         
         expand_entity1 = self.expand_with_entiy_type(base_entity,self.expand_rule1,self.level1)
 
-
         if len(expand_entity1) > 10:
-        
-            person = {}
-        
-            for ent in expand_entity1:
-                if ent in base_entity:
-                    person[ent] = 1
-                else:
-                    person[ent] = 0.5
+            
+            gr = self.build_graph(expand_entity1)
 
-            gr = nx.Graph()
-            gr.add_nodes_from(expand_entity1)
-            nodePairs = list(itertools.combinations(expand_entity1,2))
-
-            for pair in nodePairs:
-                ent1,ent2 = pair[0],pair[1]
-                weight = get_weight2(ent1,ent2)
-                gr.add_edge(ent1,ent2,weight=weight)
-
-
-            #去掉0初度的点, 防止pagerank报错
-            W = nx.DiGraph(gr)    
-            degree = W.out_degree(weight=weight)
-            for(u,v,d) in W.edges(data=True):
-                if degree[u] == 0:
-                    gr.remove_node(u)
-        
-            pr = nx.pagerank_numpy(gr,weight='weight',alpha=0.8,personalization=person)#,max_iter=400)
+            pr = self.get_filter_entity(gr)
+            
             keyphrases = sorted(pr, key=pr.get, reverse=True)
 
             n = 30        
 
             l = len(keyphrases) if len(keyphrases) < n else n
 
-            expand_entity1 = set(keyphrases[:l])
+            expand_entity1 = set(keyphrases[:l]).union(base_entity)
 
+            self.build_graph(expand_entity1)
+            
+            print(expand_entity1)
         
-        print("len expand entity",len(expand_entity1))
         expand_entity2 = self.expand_with_entiy_type(expand_entity1,self.expand_rule2,self.level2)
 
         return expand_entity2
 
 
+#这个方法先扩同义词, 然后根据联通分量过滤或者度进行过滤
+class SynDegreeRelateExpansioner(noconstraints_entity_expansioner):
+    
+    def __init__(self,mquestion,entity_finder,level1,level2,display,alg):
+        noconstraints_entity_expansioner.__init__(self,mquestion,entity_finder,display)
+        self.level1 = level1
+        self.level2 = level2
+        self.expand_rule1 = searcher.synonym_entity
+        self.expand_rule2 = searcher.relate_entity
+        self.__expand_entity = 0
+        self.alg = alg
+
+    def build_graph(self,entity):
+        gr = nx.Graph()
+        gr.add_nodes_from(entity)
+        node_pairs = list(itertools.combinations(entity,2))
+
+        for ent1,ent2 in node_pairs:
+            weight = get_weight2(ent1,ent2)
+            if weight > 0 :
+                gr.add_edge(ent1,ent2,weight=weight)
+
+        return gr
+
+    #手工定规则, 约减节点
+    def remove_nodes(self,gr):
+        alg = self.alg 
+        
+        result = set()
+        
+        #联通度
+        if alg == 'cc':
+
+            #得到连通分量的子图
+            sub_graphs = nx.connected_component_subgraphs(gr)
+
+            for sub in sub_graphs:
+                if len(sub) < 2:
+                    result = result.union(sub)
+
+        elif alg == 'kcore':
+            result = set(nx.k_crust(gr,k=2).nodes())
+                    
+        return result
+
+        
+    def expand(self):
+        #基本实体    
+        base_entity = self.title_entity()
+        
+        expand_entity1 = self.expand_with_entiy_type(base_entity,self.expand_rule1,self.level1)
+
+        if len(expand_entity1) > 10:
+
+            gr = self.build_graph(expand_entity1)
+
+            remove = self.remove_nodes(gr)
+        
+            expand_entity1 = expand_entity1.difference(remove)#.union(base_entity)
+            print("基实体数目 : %s"%(len(expand_entity1)))        
+        
+        expand_entity2 = self.expand_with_entiy_type(expand_entity1,self.expand_rule2,self.level2)
+
+        return expand_entity2
         
