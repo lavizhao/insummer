@@ -30,8 +30,8 @@ def exp(qnum):
     for i in range(qnum):
         print("问题 %s"%(i))
         q = questions[i]
-        ose = OnlySynExpansioner(q,finder,max_level=1,display=True)
-        ratio,quantity = ose.run()
+        ose = OnlySynExpansioner(q,finder,level=1,display=True)
+        ratio,quantity,dumb = ose.run()
         tratio += ratio
         tquantity += quantity
         print(100*"=")
@@ -42,5 +42,5 @@ def exp(qnum):
 if __name__ == '__main__':
     print(__doc__)
 
-    exp(300)
+    exp(30)
 

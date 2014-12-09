@@ -26,14 +26,16 @@ questions = data.get_data()
 #定义exp函数, 是实验的主体
 #qnum是问题数据的个数
 def exp(qnum):
-    tratio,tquantity,te = 0,0,0
+    tratio,tquantity,te,tf = 0,0,0,0
     for i in range(qnum):
         print("问题 %s"%(i))
         q = questions[i]
-        #ose = SynRankRelateExpansioner(q,finder,level1=1,level2=1,display=True,rank_alg='hits')
+        #ose = SynRankRelateExpansioner(q,finder,level1=1,level2=1,display=True,rank_alg='hits',n=30)
+        
         ose = SynDegreeRelateExpansioner(q,finder,level1=1,level2=1,display=True,alg='kcore')
-        #ose = SynRelateExpansioner(q,finder,max_level=1,display=True)
-        ratio,quantity,expand_entity = ose.run()
+        #ose = SynRelateExpansioner(q,finder,level1=1,level2=1,display=True)
+        
+        ratio,quantity,expand_entity,filter_len = ose.run()
 
         #命中率
         tratio += ratio
@@ -43,6 +45,9 @@ def exp(qnum):
 
         #扩展实体个数
         te += expand_entity
+
+        #过滤实体个数
+        tf +=  filter_len
         
         #ose.print_sentence_entity()
         print(100*"=")
@@ -50,6 +55,7 @@ def exp(qnum):
     print("平均命中率 : %s"%(tratio/qnum))
     print("平均命中个数 : %s"%(tquantity/qnum))
     print("平均扩展实体个数: %s"%(te/qnum))
+    print("平均同义层过滤后实体个数: %s"%(tf/qnum))
 
 if __name__ == '__main__':
     print(__doc__)
