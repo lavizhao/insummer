@@ -246,7 +246,7 @@ class NaiveAccocSpaceWrapper(object):
     def sim(self,t1,t2):
         self.load()    
         return self.assoc.assoc_between_two_terms(t1,t2)
-        
+'''        
 def init_assoc_space():
     assoc_space_dir = '/home/lavi/.conceptnet5/assoc/assoc-space-5.3'
     
@@ -256,7 +256,7 @@ def init_assoc_space():
     sa = NaiveAccocSpaceWrapper(assoc_space_dir,finder)
 
     return sa
-    
+'''    
 
 cp_tool = concept_tool()
 

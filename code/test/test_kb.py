@@ -3,7 +3,7 @@
 import sys
 sys.path.append("..")
 import insummer
-from insummer.knowledge_base import concept_tool,init_assoc_space,NaiveAccocSpaceWrapper
+from insummer.knowledge_base import concept_tool,NaiveAccocSpaceWrapper#init_assoc_space
 from insummer.knowledge_base.relation import relation_tool
 
 import unittest
@@ -148,6 +148,7 @@ class test(unittest.TestCase):
         rel5 = 'fuck'
         self.assertEqual(self.re.synonym_type(rel5),False)
 
+    '''
     def testNeigh(self):
         cp1 = 'car'
         cp2 = 'fuck'
@@ -155,6 +156,7 @@ class test(unittest.TestCase):
         sb = init_assoc_space()
         cp1,cp2 = self.cn.add_prefix(cp1),self.cn.add_prefix(cp2)
         print(sb.sim(cp1,cp2))
+    '''
 
     def testN(self):
         cp1 = 'car'
