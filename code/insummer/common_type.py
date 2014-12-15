@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+#coding=utf-8
 
 '''
 这个文件的主要作用是定义一些常见的数据结构
