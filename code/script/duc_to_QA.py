@@ -9,8 +9,10 @@ import insummer
 from insummer.common_type import Question,Answer
 from insummer.read_conf import config
 
-t_path = config('../../conf/question.conf')
+#获得duc文档路径和最后question.pkl存放路径
+duc_conf = config('../../conf/question.conf')
 
+#将某一具体的文档处理成单个答案
 def doc_to_answer(doc_path):
     answer_re = re.compile(r'''<TEXT>(.+?)</TEXT>''',re.DOTALL)
     p_re = re.compile(r'''<P>(.+?)</P>''',re.DOTALL)
@@ -24,10 +26,10 @@ def doc_to_answer(doc_path):
     p_list = p_re.findall(answer_part)
     text_str = ''
     for idx,p_line in enumerate(p_list):
-        #text_str += p_line.rstrip('\n')
         text_str += p_line.replace('\n',' ')
     return text_str
 
+#根据topic文档，将topic和其对应的文档转换成question和answer
 def get_topic(t_path):
     #REs for extract the topic items
     topic_re = re.compile(r'''<topic>(.+?)</topic>''',re.DOTALL)
@@ -38,13 +40,15 @@ def get_topic(t_path):
 
     print("开始读取topic文档...")
     str_list = ''
-    with open(topic_path,'r') as infile:
+    with open(t_path['duc_topic'],'r') as infile:
         for line in infile.readlines():
             if line != '\n':
                 str_list += line
         infile.close()
     print("开始抽取topic内容...")
     topic_str_list = topic_re.findall(str_list)
+
+    question_list = []
     
     for idx,item in enumerate(topic_str_list):
         #doc_topic_dir:
@@ -59,16 +63,29 @@ def get_topic(t_path):
         question_title = topic_title + topic_narr
 
         #construct the answer:
+        answer_list = []
         for doc_t in topic_docs:
-            doc_path = test_path + topic_dir_num + doc_t
+            doc_path = t_path['duc_main'] + topic_dir_num + doc_t
             single_answer = doc_to_answer(doc_path)
-            print(single_answer)
-            break
-        break
+            answer_list.append(Answer(single_answer,0,0,""))
 
+        question_list.append(Question(question_title,'','',answer_list,"",len(answer_list)))
+
+    with open(t_path['duc_question'],'wb') as outfile:
+        pickle.dump(question_list,outfile,True)
+        outfile.close()
+
+#测试一下转换后的问题和答案，存在question_data里了
+def test_question(t_path):
+    with open(t_path['duc_question'],'rb') as infile:
+        test_list = pickle.load(infile)
+        infile.close()
+    for idx in test_list:
+        print(idx.get_count())
+        print(idx.get_nbest_content())
 
 if __name__ == "__main__":
             
-    topic_path = t_path["duc_topic"]
-    test_path = t_path["duc_main"]
-    get_topic(topic_path)
+    get_topic(duc_conf)
+    test_question(duc_conf)
+
