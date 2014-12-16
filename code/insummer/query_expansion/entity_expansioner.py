@@ -13,6 +13,8 @@ from ..knowledge_base.entity_lookup import ConceptnetEntityLookup,InsunnetEntity
 from ..knowledge_base import concept_tool
 from ..evaluation import bias_overlap_ratio,bias_overlap_quantity
 
+from ..ranker import Pageranker,Hitsranker,CCRanker,KCoreRanker
+
 nlp = NLP()
 searcher = InsunnetEntityLookup()#ConceptnetEntityLookup()
 
@@ -333,12 +335,11 @@ def get_weight2(ent1,ent2):
 
 
 #这个方法先扩同义词, 然后用rank(page rank 或者hits)
-class SynRankRelateExpansioner(level_filter_entity_expansioner):
+class SynPagerankExpansioner(level_filter_entity_expansioner):
 
     #n是同义词过滤实体后的个数
-    def __init__(self,mquestion,entity_finder,level1,level2,display,rank_alg,n=30):
+    def __init__(self,mquestion,entity_finder,level1,level2,display,n=30):
         level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
-        self.rank_alg = rank_alg
         self.n = n
 
 
@@ -350,15 +351,10 @@ class SynRankRelateExpansioner(level_filter_entity_expansioner):
         if len(base_entity) < 10:
             return base_entity
 
-        #建立图结构
-        graph = self.build_graph(base_entity)
-
-        #进行rank
-        important_entity = self.rank_entity(graph)
-
-        #rank
-        important_entity = sorted(important_entity, key=important_entity.get, reverse=True)
-
+        ranker = Pageranker(base_entity)
+        result = ranker.rank()    
+            
+        important_entity = result
         #先求最小索引
         l = min(len(important_entity),self.n)
         
@@ -383,69 +379,60 @@ class SynRankRelateExpansioner(level_filter_entity_expansioner):
 
     #==============================================================
         
-    def build_graph(self,entity):
-        gr = nx.Graph()
-        gr.add_nodes_from(entity)
-        node_pairs = list(itertools.combinations(entity,2))
-
-        for ent1,ent2 in node_pairs:
-            weight = get_weight2(ent1,ent2)
-            if weight > 0:
-                gr.add_edge(ent1,ent2,weight=weight)
-
-        return gr
-
-    def check_alg(self,alg):
-        alg_set = ['hits','pagerank']
-        if not alg in alg_set:
-            print("not found alg")
-            sys.exit(1)
-
-
-    #用page rank 得到同义实体的重要成都
-    def pagerank(self,gr):
-        #去掉0初度的点, 防止pagerank报错
-        W = nx.DiGraph(gr)    
-        degree = W.out_degree(weight='weight')
-        for(u,v,d) in W.edges(data=True):
-            if degree[u] == 0:
-                try:
-                    gr.remove_node(u)
-                except:
-                    pass
-
-        base_entity = self.title_entity()
-        person = {}            
-        for ent in gr.nodes():
-            if ent in base_entity:
-                person[ent] = 1
-            else:
-                person[ent] = 0.5
-
-        pr = nx.pagerank_numpy(gr,weight='weight',alpha=0.8,personalization=person)#,max_iter=400)    
-
-        return pr
-
 
     def hits(self,gr):
         h,a = nx.hits(gr,max_iter = 300)
         return h
         
-    #得到过滤后的实体
-    def rank_entity(self,gr):
-        alg = self.rank_alg
-        #检查算法的合理性
-        self.check_alg(alg)
+#这个方法先扩同义词, 然后用rank(page rank 或者hits)
+class SynHitsExpansioner(level_filter_entity_expansioner):
 
-        if alg == 'pagerank':
-            return self.pagerank(gr)
-        elif alg == 'hits':
-            return self.hits(gr)
+    #n是同义词过滤实体后的个数
+    def __init__(self,mquestion,entity_finder,level1,level2,display,n=30):
+        level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
+        self.n = n
 
-        else:
-            pass
+
+    #=======================重写部分================================
+    #重写同义词过滤的方法
+    def syn_filter(self,base_entity):
+
+        #如果基实体数量小于十个, 那么直接返回
+        if len(base_entity) < 10:
+            return base_entity
+
+        ranker = Hitsranker(base_entity)
+        result = ranker.rank()    
+            
+        important_entity = result
+        #先求最小索引
+        l = min(len(important_entity),self.n)
         
+        #得到top n, 并且并上基实体
+        topn = set(important_entity[:l]).union(self.title_entity())
+
+        return topn
+
+    #重载relate_expand
+    def relate_expand(self,entity):
         
+        dumb,level2 = self.get_level()
+        expand_rule = searcher.relate_entity
+        
+        result = self.expand_with_entiy_type(entity,expand_rule,level2)
+        
+        return result
+        
+    #重现
+    def relate_filter(self,base_entity,entity):
+        pass
+
+    #==============================================================
+        
+
+    def hits(self,gr):
+        h,a = nx.hits(gr,max_iter = 300)
+        return h        
 
 #这个方法先扩同义词, 然后根据联通分量过滤或者度进行过滤
 class SynDegreeRelateExpansioner(level_filter_entity_expansioner):
@@ -532,8 +519,87 @@ class SynDegreeRelateExpansioner(level_filter_entity_expansioner):
         return result
 
 
+#这个方法先扩同义词, 然后根据联通分量过滤或者度进行过滤
+class SynCCExpansioner(level_filter_entity_expansioner):
+    
+    def __init__(self,mquestion,entity_finder,level1,level2,display):
+        level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
+
+    #=======================重写部分================================
+    #重写同义词过滤的方法
+    def syn_filter(self,base_entity):
+
+        #如果基实体数量小于十个, 那么直接返回
+        if len(base_entity) < 10:
+            return base_entity
+
+        ranker = CCRanker(base_entity)
+        result = ranker.rank()    
+            
+        
+        important_entity = result.union(self.title_entity())
+
+        return important_entity
+
+    #重载relate_expand
+    def relate_expand(self,entity):
+        
+        dumb,level2 = self.get_level()
+        expand_rule = searcher.relate_entity
+        
+        result = self.expand_with_entiy_type(entity,expand_rule,level2)
+        
+        return result
+        
+    #重现
+    def relate_filter(self,base_entity,entity):
+        pass
+
+    #==============================================================
+        
+#这个方法先扩同义词, 然后根据联通分量过滤或者度进行过滤
+class SynKCoreExpansioner(level_filter_entity_expansioner):
+    
+    def __init__(self,mquestion,entity_finder,level1,level2,display):
+        level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
+
+    #=======================重写部分================================
+    #重写同义词过滤的方法
+    def syn_filter(self,base_entity):
+
+        #如果基实体数量小于十个, 那么直接返回
+        if len(base_entity) < 10:
+            return base_entity
+
+        ranker = KCoreRanker(base_entity)
+        result = ranker.rank()    
+        
+        important_entity = result.union(self.title_entity())
+
+        return important_entity
+
+    #重载relate_expand
+    def relate_expand(self,entity):
+        
+        dumb,level2 = self.get_level()
+        expand_rule = searcher.relate_entity
+        
+        result = self.expand_with_entiy_type(entity,expand_rule,level2)
+        
+        return result
+        
+    #重现
+    def relate_filter(self,base_entity,entity):
+        pass
+
+    #==============================================================
+        
+
+
+        
+
 #过滤关联层为主        
-class RankRelateFilterExpansioner(SynRankRelateExpansioner):
+class RankRelateFilterExpansioner(SynPagerankExpansioner):
     def __init__(self,mquestion,entity_finder,level1,level2,display,rank_alg,n=30):
         SynRankRelateExpansioner.__init__(self,mquestion,entity_finder,level1,level2,display,rank_alg,n=30)
     #*****************************************重写部分*********************************************

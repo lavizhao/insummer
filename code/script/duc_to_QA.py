@@ -81,8 +81,11 @@ def test_question(t_path):
         test_list = pickle.load(infile)
         infile.close()
     for idx in test_list:
-        print(idx.get_count())
-        print(idx.get_nbest_content())
+        #print(idx.get_count())
+        #print(idx.get_nbest_content())
+        idx.print()
+
+    print("问题总数 %s"%(len(test_list)))
 
 if __name__ == "__main__":
             
