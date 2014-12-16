@@ -531,4 +531,53 @@ class SynDegreeRelateExpansioner(level_filter_entity_expansioner):
 
         return result
 
+
+#过滤关联层为主        
+class RankRelateFilterExpansioner(SynRankRelateExpansioner):
+    def __init__(self,mquestion,entity_finder,level1,level2,display,rank_alg,n=30):
+        SynRankRelateExpansioner.__init__(self,mquestion,entity_finder,level1,level2,display,rank_alg,n=30)
+    #*****************************************重写部分*********************************************
         
+    #重写同义词过滤的方法
+    def syn_filter(self,base_entity):
+
+        #如果基实体数量小于十个, 那么直接返回
+        if len(base_entity) < 10:
+            return base_entity
+
+        #建立图结构
+        graph = self.build_graph(base_entity)
+
+        #进行rank
+        important_entity = self.rank_entity(graph)
+
+        #=============================>改这儿
+        print(important_entity)
+
+        #rank
+        important_entity = sorted(important_entity, key=important_entity.get, reverse=True)
+
+        #先求最小索引
+        l = min(len(important_entity),self.n)
+        
+        #得到top n, 并且并上基实体
+        topn = set(important_entity[:l]).union(self.title_entity())
+
+        return topn
+
+    #重载relate_expand
+    def relate_expand(self,entity):
+        
+        dumb,level2 = self.get_level()
+        expand_rule = searcher.relate_entity
+        
+        result = self.expand_with_entiy_type(entity,expand_rule,level2)
+        
+        return result
+
+    def relate_filter(self,base_entity,entity):
+        pass
+
+    #*********************************************************************************************        
+
+    

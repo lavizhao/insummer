@@ -4,12 +4,12 @@
 import re
 import pickle
 import sys
-#sys.path.append("..")
-#import insummer
-#from insummer.common_type import Question,Answer
-#from insummer.read_conf import config
+sys.path.append("..")
+import insummer
+from insummer.common_type import Question,Answer
+from insummer.read_conf import config
 
-#t_path = config('../../conf/question.conf')
+t_path = config('../../conf/question.conf')
 
 def doc_to_answer(doc_path):
     answer_re = re.compile(r'''<TEXT>(.+?)</TEXT>''',re.DOTALL)
@@ -68,6 +68,7 @@ def get_topic(t_path):
 
 
 if __name__ == "__main__":
-    topic_path = '/home/charch/gitwork/insummer/duc/duc_data/duc2007_topics.sgml'
-    test_path = '/home/charch/gitwork/insummer/duc/duc_data/duc2007_testdocs/main'
+            
+    topic_path = t_path["duc_topic"]
+    test_path = t_path["duc_main"]
     get_topic(topic_path)
