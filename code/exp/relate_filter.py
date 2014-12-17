@@ -11,7 +11,7 @@ sys.path.append("..")
 import insummer
 
 #将同义词扩展模块引入
-from insummer.query_expansion.entity_expansioner import SynPagerankExpansioner,SynHitsExpansioner,SynCCExpansioner,SynKCoreExpansioner
+from insummer.query_expansion.entity_expansioner import RankRelateFilterExpansioner
 
 #引入实体发现模块,暂定的是baseline的ngram模块
 from insummer.query_expansion.entity_finder import NgramEntityFinder
@@ -29,11 +29,8 @@ def exp(qnum):
     tratio,tquantity,te,tf = 0,0,0,0
     for i in range(qnum):
         print("问题 %s"%(i))
-        q = questions[i]
-        ose = SynPagerankExpansioner(q,finder,level1=1,level2=1,display=True,n=30)
-        #ose = SynHitsExpansioner(q,finder,level1=1,level2=1,display=True,n=30)
-        #ose = SynCCExpansioner(q,finder,level1=1,level2=1,display=True)
-        #ose = SynKCoreExpansioner(q,finder,level1=1,level2=1,display=True)
+        q = questions[1]
+        ose = RankRelateFilterExpansioner(q,finder,1,1,display=True)
         ratio,quantity,expand_entity,filter_len = ose.run()
 
         #命中率
@@ -59,5 +56,5 @@ def exp(qnum):
 if __name__ == '__main__':
     print(__doc__)
 
-    exp(100)
+    exp(1)
 
