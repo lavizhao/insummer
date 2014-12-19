@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 
 import time
 clock = time.time
+import multiprocessing as mp
 
 #定义抽象类
 #这个类是实体扩展的类,主要功能是
@@ -244,36 +245,6 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
 
         return expand_entity
 
-
-    #这个是base entity给定后(是个字典, 带重要性), 通过relate_filter判断关联实体与base_entity 的关系, 决定取舍, 这个因为逻辑比较复杂, 所以只做一层
-    #expand rule应该会设为关联关系    
-    def expand_with_entity_weight(self,base_entity,relate_filter,expand_rule):
-        expand_entity = {}
-        #已经被排除的
-        unkeep = set()
-
-        for entity in base_entity:
-
-            #从关联实体中抽取候选实体
-            cand_entity = expand_rule(entity)
-
-            #===> 现在的做法是对每个候选实体, 查看一遍weight
-            #对每个候选实体来说
-            for acand in cand_entity:
-
-                if (acand in expand_entity) or (acand in unkeep):
-                    pass
-                else:
-                    
-                    #得到 留不留 和 权重
-                    keep,weight = relate_filter(acand,base_entity)
-                    
-                    if keep :
-                        expand_entity[acand] = weight
-                    else:
-                        unkeep.add(acand)
-
-        return expand_entity
 
     #==================下面的是接口方法======================
     #expand的具体方法
@@ -559,8 +530,8 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
             return base_entity
 
         ranker = Pageranker(base_entity)
-        result = ranker.rank(return_type='dict')    
-            
+        result = ranker.rank(return_type='dict')
+
         important_entity = result
         #先求最小索引
         l = min(len(important_entity),self.n)
@@ -568,56 +539,50 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
         #得到top n, 并且并上基实体,注意, 这里返回的形式是dict, 所以后面加上了这么多东西
         topn = important_entity[:l]
 
+        title_entity = self.title_entity()
+
         for indx in range(l+1,len(important_entity)):
             enti,weig = important_entity[indx]
-            if enti in base_entity:
+            if enti in title_entity:
                 topn.append((enti,weig))
 
         topn = dict(topn)
-        #print(topn)
          
         return topn
 
+    
     #重载relate_expand
-    def relate_expand(self,entity):
-        
-        expand_rule = searcher.relate_entity
-        
-        expand_entity = self.expand_with_entity_weight(entity,self.relate_filter,expand_rule)
+    #这个是我想要的非并行化的扩展方法, 还在弄
+    #entity_dict 是一个带权重的实体集
+    def relate_expand(self,entity_dict):
 
-        keep_entity = sorted(expand_entity.items(),key=lambda d:d[1],reverse=True)
+        target_dict = {}
 
-        keep_entity = keep_entity[:1000]
+        #对于基实体的每个实体来说
+        for entity in entity_dict:
+            #得到的是一个(邻居,权值)的list
+            neighbour_weight = searcher.relate_entity_weight(entity)
 
-        keep_entity = set([x for (x,y) in keep_entity])
-        
-        result = keep_entity.union(entity.keys())
-        
+            #反向建立一个target的字典里面存储的都是base entity 和weight, 暂定为tuple
+            for neighbour,nweight in neighbour_weight:
+                target_dict.setdefault(neighbour,[])
+                target_dict[neighbour].append( (entity,nweight) )
+
+        result = self.relate_filter(target_dict)
+                
         return result
         
-    #重现
-    def relate_filter(self,entity,base_entity):
-        begin = clock()
-        self.count += 1
+    def relate_filter(self,entity_dict):
 
-        if self.count % 1000 == 0:
-            print(self.count)
+        result = set()
         
-        keep = False
-        result = 0
-        for bentity in base_entity:
+        for entity in entity_dict:
+            weight_list = entity_dict[entity]
+            if len(weight_list) > 2:
+                result.add(entity)
 
-            #先求权重
-            weight = cn.entity_strength(bentity,entity)
-
-            if weight != 0:
-                result += weight
-                keep = True
-
-        end = clock()
-        print(end-begin)
-        return keep,result
-
+        return result
+        
     #==============================================================
 
     

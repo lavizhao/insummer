@@ -29,7 +29,7 @@ def exp(qnum):
     tratio,tquantity,te,tf = 0,0,0,0
     for i in range(qnum):
         print("问题 %s"%(i))
-        q = questions[1]
+        q = questions[i]
         ose = RankRelateFilterExpansioner(q,finder,1,1,display=True)
         ratio,quantity,expand_entity,filter_len = ose.run()
 
@@ -56,5 +56,5 @@ def exp(qnum):
 if __name__ == '__main__':
     print(__doc__)
 
-    exp(1)
+    exp(100)
 

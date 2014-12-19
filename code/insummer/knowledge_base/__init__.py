@@ -23,39 +23,31 @@ nlp = NLP()
 entity_list_file = open(config("../../conf/cn_data.conf")["entity_name"],'rb')
 entity_indx = pickle.load(entity_list_file)
 
-conn = pymongo.Connection('localhost',27017)
-db = conn.insunnet
+
 class InsunnetFinder:
     def __init__(self):
         self.__usr = 'root'
         self.__pwd = ''
-        
-        #self.__db = conn.insunnet
-        #self.tbl = self.__db.assertion
-        #self.tbls = [db.assertion for i in range(20)]
-
-    def get_tbl(self):
-        tbl = db.assertion
-        return tbl
+        conn = pymongo.Connection('localhost',27017)
+        self.__db = conn.insunnet
+        self.tbl = self.__db.assertion
 
     def lookup(self,entity):
-        tbl = self.get_tbl()    
         entity = cp_tool.concept_name(entity)
         
-        result1 = list(tbl.find({'start':entity}))
-        result2 = list(tbl.find({'end':entity}))
+        result1 = list(self.tbl.find({'start':entity}))
+        result2 = list(self.tbl.find({'end':entity}))
         
         result1.extend(result2)
 
         return result1
 
     def lookup_weight(self,ent1,ent2):
-        tbl = self.get_tbl()    
         ent1 = cp_tool.concept_name(ent1)
         ent2 = cp_tool.concept_name(ent2)
 
-        result1 = list(tbl.find({'start':ent1,'end':ent2}))
-        result2 = list(tbl.find({'start':ent2,'end':ent1}))
+        result1 = list(self.tbl.find({'start':ent1,'end':ent2}))
+        result2 = list(self.tbl.find({'start':ent2,'end':ent1}))
 
         result = 0
 
@@ -66,10 +58,7 @@ class InsunnetFinder:
         else:
             return float(result2[0]['weight'])
 
-            
-    
-    
-        
+
 #定义与概念相关的常用函数集
 #这里要考虑两种情况conceptnet默认的是带/c 的, 而我自己写的不带
 class concept_tool(object):
