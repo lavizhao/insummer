@@ -11,6 +11,8 @@ import sys
 import pickle
 import time
 
+import multiprocessing as mp
+
 from math import log
 
 SMALL = 1e-6
@@ -20,7 +22,8 @@ nlp = NLP()
 #读入词表indx
 entity_list_file = open(config("../../conf/cn_data.conf")["entity_name"],'rb')
 entity_indx = pickle.load(entity_list_file)
-        
+
+
 class InsunnetFinder:
     def __init__(self):
         self.__usr = 'root'
@@ -54,13 +57,14 @@ class InsunnetFinder:
             return float(result1[0]['weight'])
         else:
             return float(result2[0]['weight'])
-        
+
+
 #定义与概念相关的常用函数集
 #这里要考虑两种情况conceptnet默认的是带/c 的, 而我自己写的不带
 class concept_tool(object):
     def __init__(self):
         self.finder = InsunnetFinder()
-
+        
     def is_english_concept(self,cp):
         cp = str(cp)
         if cp.startswith('/c'):
@@ -170,6 +174,23 @@ class concept_tool(object):
 
     def entity_strength(self,cp1,cp2):
         return self.finder.lookup_weight(cp1,cp2)
+
+    def weight_func(self,ent1,base):
+        if self.entity_strength(ent1,base) != 0:
+            return (base,1)
+        else:
+            return (base,0)
+
+    def multi_lookup(self,base_entity,entity):
+        pool = mp.Pool(processes=2)
+        print(base_entity)
+        results = [pool.apply_async(self.weight_func, args=(entity,base_entity[i],)) for i in range(len(base_entity))]
+        output = [p.get() for p in results]
+        return output
+
+        
+    def cube(self,x):
+        return x
 #试验品
 class NaiveAccocSpaceWrapper(object):
     def __init__(self,path,finder):
@@ -246,6 +267,9 @@ class NaiveAccocSpaceWrapper(object):
     def sim(self,t1,t2):
         self.load()    
         return self.assoc.assoc_between_two_terms(t1,t2)
+
+
+        
 '''        
 def init_assoc_space():
     assoc_space_dir = '/home/lavi/.conceptnet5/assoc/assoc-space-5.3'

@@ -143,6 +143,27 @@ class InsunnetEntityLookup(abstract_entity_lookup):
         #result = self.remove_prefix_suffix(result)                    
         return result
 
+    #查找实体的特定关系的实体和权重, 注意, 这个真函数的不返回权重
+    def lookup_entity_weight_with_reltype(self,entity,reltype,other_limit=None):
+        #提取名称
+        entity = cn_tool.concept_name(entity)
+
+        #查找结果
+        edges = self.cn_finder.lookup(entity)
+
+        result = []
+
+        for edge in edges:
+            start,end,rel,weight = edge['start'],edge['end'],edge['rel'],edge['weight']
+            #如果start 跟 entity 相等
+            if cn_tool.entity_equal(start,entity):
+                result.append( (end,weight)  )
+            else:
+                result.append( (start,weight) )
+
+        return result
+        
+        
     def remove_prefix_suffix(self,entity_list):
         result = set()
         for i in entity_list:
@@ -159,4 +180,7 @@ class InsunnetEntityLookup(abstract_entity_lookup):
     def relate_entity(self,entity):
         result = self.lookup_entity_with_reltype(entity,rel_tool.relate_type,insun_limit)
         return result
-        
+
+    def relate_entity_weight(self,entity):
+        result = self.lookup_entity_weight_with_reltype(entity,rel_tool.relate_type,insun_limit) 
+        return result

@@ -171,4 +171,3 @@ if __name__ == '__main__':
     insert_table(db_name,open(db_config[db_name]))
 
 
-    

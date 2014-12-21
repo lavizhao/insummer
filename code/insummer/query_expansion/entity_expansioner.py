@@ -3,7 +3,6 @@
 '''
 说明:这个文件是查询扩展类,主要负责查询扩展方面的工作
 '''
-
 import sys
 from abc import ABCMeta, abstractmethod
 from ..common_type import Question
@@ -13,13 +12,19 @@ from ..knowledge_base.entity_lookup import ConceptnetEntityLookup,InsunnetEntity
 from ..knowledge_base import concept_tool
 from ..evaluation import bias_overlap_ratio,bias_overlap_quantity
 
+from ..ranker import Pageranker,Hitsranker,CCRanker,KCoreRanker
+
 nlp = NLP()
 searcher = InsunnetEntityLookup()#ConceptnetEntityLookup()
 
 import networkx as nx
 import itertools
 from operator import itemgetter
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+
+import time
+clock = time.time
+import multiprocessing as mp
 
 #定义抽象类
 #这个类是实体扩展的类,主要功能是
@@ -201,7 +206,7 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
         
     #这个是扩展的通用方法, 给定输入的base_entity集合, 利用某种扩展规则进行扩展, 还有扩展层数
     #返回扩展的实体    
-    def expand_with_entiy_type(self,base_entity,expand_rule,expand_level):
+    def expand_with_entity_type(self,base_entity,expand_rule,expand_level):
 
         #开始扩展
         #算法流程打算用基于栈的非递归方法
@@ -239,7 +244,7 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
                 previous_expand_entity = expand_entity.copy()
 
         return expand_entity
-        
+
 
     #==================下面的是接口方法======================
     #expand的具体方法
@@ -262,7 +267,7 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
         
     def syn_expand(self,base_entity):
         expand_rule = searcher.synonym_entity
-        result = self.expand_with_entiy_type(base_entity,expand_rule,self.level1)
+        result = self.expand_with_entity_type(base_entity,expand_rule,self.level1)
         return result
         
     #如果你啥也不写就是啥也不过滤
@@ -302,7 +307,7 @@ class SynRelateExpansioner(level_filter_entity_expansioner):
         dumb,level2 = self.get_level()
         expand_rule = searcher.relate_entity
         
-        result = self.expand_with_entiy_type(entity,expand_rule,level2)
+        result = self.expand_with_entity_type(entity,expand_rule,level2)
         
         return result
 
@@ -333,12 +338,11 @@ def get_weight2(ent1,ent2):
 
 
 #这个方法先扩同义词, 然后用rank(page rank 或者hits)
-class SynRankRelateExpansioner(level_filter_entity_expansioner):
+class SynPagerankExpansioner(level_filter_entity_expansioner):
 
     #n是同义词过滤实体后的个数
-    def __init__(self,mquestion,entity_finder,level1,level2,display,rank_alg,n=30):
+    def __init__(self,mquestion,entity_finder,level1,level2,display,n=30):
         level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
-        self.rank_alg = rank_alg
         self.n = n
 
 
@@ -350,15 +354,10 @@ class SynRankRelateExpansioner(level_filter_entity_expansioner):
         if len(base_entity) < 10:
             return base_entity
 
-        #建立图结构
-        graph = self.build_graph(base_entity)
-
-        #进行rank
-        important_entity = self.rank_entity(graph)
-
-        #rank
-        important_entity = sorted(important_entity, key=important_entity.get, reverse=True)
-
+        ranker = Pageranker(base_entity)
+        result = ranker.rank()    
+            
+        important_entity = result
         #先求最小索引
         l = min(len(important_entity),self.n)
         
@@ -373,7 +372,7 @@ class SynRankRelateExpansioner(level_filter_entity_expansioner):
         dumb,level2 = self.get_level()
         expand_rule = searcher.relate_entity
         
-        result = self.expand_with_entiy_type(entity,expand_rule,level2)
+        result = self.expand_with_entity_type(entity,expand_rule,level2)
         
         return result
         
@@ -383,76 +382,19 @@ class SynRankRelateExpansioner(level_filter_entity_expansioner):
 
     #==============================================================
         
-    def build_graph(self,entity):
-        gr = nx.Graph()
-        gr.add_nodes_from(entity)
-        node_pairs = list(itertools.combinations(entity,2))
-
-        for ent1,ent2 in node_pairs:
-            weight = get_weight2(ent1,ent2)
-            if weight > 0:
-                gr.add_edge(ent1,ent2,weight=weight)
-
-        return gr
-
-    def check_alg(self,alg):
-        alg_set = ['hits','pagerank']
-        if not alg in alg_set:
-            print("not found alg")
-            sys.exit(1)
-
-
-    #用page rank 得到同义实体的重要成都
-    def pagerank(self,gr):
-        #去掉0初度的点, 防止pagerank报错
-        W = nx.DiGraph(gr)    
-        degree = W.out_degree(weight='weight')
-        for(u,v,d) in W.edges(data=True):
-            if degree[u] == 0:
-                try:
-                    gr.remove_node(u)
-                except:
-                    pass
-
-        base_entity = self.title_entity()
-        person = {}            
-        for ent in gr.nodes():
-            if ent in base_entity:
-                person[ent] = 1
-            else:
-                person[ent] = 0.5
-
-        pr = nx.pagerank_numpy(gr,weight='weight',alpha=0.8,personalization=person)#,max_iter=400)    
-
-        return pr
-
 
     def hits(self,gr):
         h,a = nx.hits(gr,max_iter = 300)
         return h
         
-    #得到过滤后的实体
-    def rank_entity(self,gr):
-        alg = self.rank_alg
-        #检查算法的合理性
-        self.check_alg(alg)
+#这个方法先扩同义词, 然后用rank(page rank 或者hits)
+class SynHitsExpansioner(level_filter_entity_expansioner):
 
-        if alg == 'pagerank':
-            return self.pagerank(gr)
-        elif alg == 'hits':
-            return self.hits(gr)
-
-        else:
-            pass
-        
-        
-
-#这个方法先扩同义词, 然后根据联通分量过滤或者度进行过滤
-class SynDegreeRelateExpansioner(level_filter_entity_expansioner):
-    
-    def __init__(self,mquestion,entity_finder,level1,level2,display,alg):
+    #n是同义词过滤实体后的个数
+    def __init__(self,mquestion,entity_finder,level1,level2,display,n=30):
         level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
-        self.alg = alg
+        self.n = n
+
 
     #=======================重写部分================================
     #重写同义词过滤的方法
@@ -462,16 +404,17 @@ class SynDegreeRelateExpansioner(level_filter_entity_expansioner):
         if len(base_entity) < 10:
             return base_entity
 
-        #建立图结构
-        graph = self.build_graph(base_entity)
-
-        remove = self.remove_nodes(graph)
-
-        important_entity = base_entity.difference(remove)
+        ranker = Hitsranker(base_entity)
+        result = ranker.rank()    
+            
+        important_entity = result
+        #先求最小索引
+        l = min(len(important_entity),self.n)
         
-        important_entity = important_entity.union(self.title_entity())
+        #得到top n, 并且并上基实体
+        topn = set(important_entity[:l]).union(self.title_entity())
 
-        return important_entity
+        return topn
 
     #重载relate_expand
     def relate_expand(self,entity):
@@ -479,7 +422,7 @@ class SynDegreeRelateExpansioner(level_filter_entity_expansioner):
         dumb,level2 = self.get_level()
         expand_rule = searcher.relate_entity
         
-        result = self.expand_with_entiy_type(entity,expand_rule,level2)
+        result = self.expand_with_entity_type(entity,expand_rule,level2)
         
         return result
         
@@ -489,46 +432,157 @@ class SynDegreeRelateExpansioner(level_filter_entity_expansioner):
 
     #==============================================================
         
-    def build_graph(self,entity):
-        gr = nx.Graph()
-        gr.add_nodes_from(entity)
-        node_pairs = list(itertools.combinations(entity,2))
 
-        for ent1,ent2 in node_pairs:
-            weight = get_weight2(ent1,ent2)
-            if weight > 0 :
-                gr.add_edge(ent1,ent2,weight=weight)
+    def hits(self,gr):
+        h,a = nx.hits(gr,max_iter = 300)
+        return h        
 
-        return gr
 
-    #手工定规则, 约减节点
-    #**************注意, 这是不要的节点**********************    
-    def remove_nodes(self,gr):
-        alg = self.alg 
+#这个方法先扩同义词, 然后根据联通分量过滤或者度进行过滤
+class SynCCExpansioner(level_filter_entity_expansioner):
+    
+    def __init__(self,mquestion,entity_finder,level1,level2,display):
+        level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
+
+    #=======================重写部分================================
+    #重写同义词过滤的方法
+    def syn_filter(self,base_entity):
+
+        #如果基实体数量小于十个, 那么直接返回
+        if len(base_entity) < 10:
+            return base_entity
+
+        ranker = CCRanker(base_entity)
+        result = ranker.rank()    
+            
         
+        important_entity = result.union(self.title_entity())
+
+        return important_entity
+
+    #重载relate_expand
+    def relate_expand(self,entity):
+        
+        dumb,level2 = self.get_level()
+        expand_rule = searcher.relate_entity
+        
+        result = self.expand_with_entity_type(entity,expand_rule,level2)
+        
+        return result
+        
+    #重现
+    def relate_filter(self,base_entity,entity):
+        pass
+
+    #==============================================================
+        
+#这个方法先扩同义词, 然后根据联通分量过滤或者度进行过滤
+class SynKCoreExpansioner(level_filter_entity_expansioner):
+    
+    def __init__(self,mquestion,entity_finder,level1,level2,display):
+        level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
+
+    #=======================重写部分================================
+    #重写同义词过滤的方法
+    def syn_filter(self,base_entity):
+
+        #如果基实体数量小于十个, 那么直接返回
+        if len(base_entity) < 10:
+            return base_entity
+
+        ranker = KCoreRanker(base_entity)
+        result = ranker.rank()    
+        
+        important_entity = result.union(self.title_entity())
+
+        return important_entity
+
+    #重载relate_expand
+    def relate_expand(self,entity):
+        
+        dumb,level2 = self.get_level()
+        expand_rule = searcher.relate_entity
+        
+        result = self.expand_with_entity_type(entity,expand_rule,level2)
+        
+        return result
+        
+    #重现
+    def relate_filter(self,base_entity,entity):
+        pass
+
+    #==============================================================
+        
+
+#过滤关联层为主        
+class RankRelateFilterExpansioner(SynPagerankExpansioner):
+    def __init__(self,mquestion,entity_finder,level1,level2,display,n=30):
+        level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
+        self.n = n
+        self.count = 0
+
+    #=======================重写部分================================
+    #重写同义词过滤的方法
+    def syn_filter(self,base_entity):
+
+        #如果基实体数量小于十个, 那么直接返回
+        if len(base_entity) < 10:
+            return base_entity
+
+        ranker = Pageranker(base_entity)
+        result = ranker.rank(return_type='dict')
+
+        important_entity = result
+        #先求最小索引
+        l = min(len(important_entity),self.n)
+
+        #得到top n, 并且并上基实体,注意, 这里返回的形式是dict, 所以后面加上了这么多东西
+        topn = important_entity[:l]
+
+        title_entity = self.title_entity()
+
+        for indx in range(l+1,len(important_entity)):
+            enti,weig = important_entity[indx]
+            if enti in title_entity:
+                topn.append((enti,weig))
+
+        topn = dict(topn)
+         
+        return topn
+
+    
+    #重载relate_expand
+    #这个是我想要的非并行化的扩展方法, 还在弄
+    #entity_dict 是一个带权重的实体集
+    def relate_expand(self,entity_dict):
+
+        target_dict = {}
+
+        #对于基实体的每个实体来说
+        for entity in entity_dict:
+            #得到的是一个(邻居,权值)的list
+            neighbour_weight = searcher.relate_entity_weight(entity)
+
+            #反向建立一个target的字典里面存储的都是base entity 和weight, 暂定为tuple
+            for neighbour,nweight in neighbour_weight:
+                target_dict.setdefault(neighbour,[])
+                target_dict[neighbour].append( (entity,nweight) )
+
+        result = self.relate_filter(target_dict)
+                
+        return result
+        
+    def relate_filter(self,entity_dict):
+
         result = set()
         
-        #联通度
-        if alg == 'cc':
-
-            #得到连通分量的子图
-            sub_graphs = nx.connected_component_subgraphs(gr)
-
-            #如果子图的节点数大于2, 那么则要这个子图
-            for sub in sub_graphs:
-                if len(sub) < 10:
-                    result = result.union(sub.nodes())
-
-                else:
-                    pass
-
-        elif alg == 'kcore':
-            result = set(nx.k_crust(gr,k=2).nodes())
-
-        else:
-            print("error in alg")
-            sys.exit(1)
+        for entity in entity_dict:
+            weight_list = entity_dict[entity]
+            if len(weight_list) > 2:
+                result.add(entity)
 
         return result
-
         
+    #==============================================================
+
+    

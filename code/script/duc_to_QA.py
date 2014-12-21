@@ -98,7 +98,27 @@ def get_topic(t_path):
         pickle.dump(question_list,outfile,True)
         outfile.close()
 
+<<<<<<< HEAD
 #测试一下转换后的问题和答案，存在question_data里了,测试在test duc_data.py
+=======
+#测试一下转换后的问题和答案，存在question_data里了
+def test_question(t_path):
+    with open(t_path['duc_question'],'rb') as infile:
+        test_list = pickle.load(infile)
+        infile.close()
+    for idx in test_list:
+        #print(idx.get_count())
+        #print(idx.get_nbest_content())
+        idx.print()
+
+    print("问题总数 %s"%(len(test_list)))
+>>>>>>> e3eed155f079fd6bf16b1146829a80815467974b
 
 if __name__ == "__main__":
+            
     get_topic(duc_conf)
+<<<<<<< HEAD
+=======
+    test_question(duc_conf)
+
+>>>>>>> e3eed155f079fd6bf16b1146829a80815467974b
