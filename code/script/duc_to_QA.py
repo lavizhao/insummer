@@ -4,6 +4,7 @@
 import re
 import pickle
 import sys
+from bs4 import BeautifulSoup
 sys.path.append("..")
 import insummer
 from insummer.common_type import Question,Answer
@@ -22,11 +23,29 @@ def doc_to_answer(doc_path):
             if line != '\n':
                 text_str += line
         infile.close()
+
     answer_part = answer_re.findall(text_str)[0]
+    text_str = BeautifulSoup(answer_part).get_text()
+    text_str.replace('\n',' ')
+    text_str.replace('&QL;',' ')
+    text_str.replace('&QC;',' ')
+    text_str.replace('&LR;',' ')
+    text_str.replace('&UR;',' ')
+    text_str.replace('-----',' ')
+    text_str.replace('----',' ')
+    '''
     p_list = p_re.findall(answer_part)
     text_str = ''
     for idx,p_line in enumerate(p_list):
-        text_str += p_line.replace('\n',' ')
+        p_line = p_line.replace('\n',' ')
+        p_line = p_line.replace('&QL;',' ')
+        p_line = p_line.replace('&QC;',' ')
+        p_line = p_line.replace('-----',' ')
+        p_line = p_line.replace('----',' ')
+        p_line = p_line.replace('&LR;',' ')
+        p_line = p_line.replace('&UR;',' ')
+        text_str += p_line
+    '''
     return text_str
 
 #根据topic文档，将topic和其对应的文档转换成question和answer
@@ -60,30 +79,26 @@ def get_topic(t_path):
         topic_docs = doc_re.findall(item)[0].split('\n')[1:-1]
 
         #construct the question:
-        question_title = topic_title + topic_narr
+        question_title = (topic_title[:-1] + '. ' + topic_narr).replace('\n',' ')
+
+        title_author = topic_dir_num
 
         #construct the answer:
         answer_list = []
         for doc_t in topic_docs:
             doc_path = t_path['duc_main'] + topic_dir_num + doc_t
+            answer_author = topic_dir_num + doc_t
             single_answer = doc_to_answer(doc_path)
-            answer_list.append(Answer(single_answer,0,0,""))
+            answer_list.append(Answer(single_answer,0,0,answer_author))
 
-        question_list.append(Question(question_title,'','',answer_list,"",len(answer_list)))
+        question_list.append(Question(question_title,'','',answer_list,title_author,len(answer_list)))
+        print(question_list[-1].get_title())
 
     with open(t_path['duc_question'],'wb') as outfile:
         pickle.dump(question_list,outfile,True)
         outfile.close()
 
-#测试一下转换后的问题和答案，存在question_data里了
-def test_question(t_path):
-    with open(t_path['duc_question'],'rb') as infile:
-        test_list = pickle.load(infile)
-        infile.close()
-    for idx in test_list:
-        print(idx.get_count())
-        print(idx.get_nbest_content())
+#测试一下转换后的问题和答案，存在question_data里了,测试在test duc_data.py
 
 if __name__ == "__main__":
     get_topic(duc_conf)
-    test_question(duc_conf)

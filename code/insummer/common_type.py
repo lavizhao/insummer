@@ -28,6 +28,9 @@ class Question:
         self.__count = answer_count
         self.type_name = "Question"
 
+    def get_author(self):
+        return self.__author
+
     def get_title(self):
         return self.__title
 
