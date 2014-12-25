@@ -28,7 +28,10 @@ class question_table(object):
         self.an_enti += ae
         self.an_word += aw
 
-    def update_question(self,qa,qw,qe):
-        self.qa_num = qa
-        self.qw_num = qw
-        self.qe_num = qe
+    def update_question(self,qa_num):
+        self.qa_num = qa_num
+
+    def get_question(self):
+        self.qw_num = self.tw_num + self.an_word
+        self.qe_num = self.te_num + self.an_enti
+        return self.qe_num,self.qw_num,self.qa_num

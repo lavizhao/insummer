@@ -37,29 +37,33 @@ def get_statistic(path,data):
         sents = nlp.sent_tokenize(title)
         e_num = 0
         w_num = 0
+        tmp_e = []
         for sent in sents:
             finder = NgramEntityFinder(sent)
             tmp_enti = finder.extract_entity()
-            e_num += len(tmp_enti)
+            tmp_e += tmp_enti
             w_num += len(nlp.word_tokenize(sent))
+        e_num = len(set(tmp_e))
         tmp_table.update_title(e_num,w_num)
 
         answers = f_question.get_nbest()
         a_num = len(answers)
+        print(a_num)
+        tmp_table.update_question(a_num)
         for idx,answer in enumerate(answers):
             e_num = 0
             w_num = 0
+            tmp_e = []
             content = answer.get_content()
             sents = nlp.sent_tokenize(content)
             s_num = len(sents)
             for sent in sents:
                 finder = NgramEntityFinder(sent)
                 tmp_enti = finder.extract_entity()
-                e_num += len(tmp_enti)
+                tmp_e += tmp_enti
                 w_num += len(nlp.word_tokenize(sent))
+            e_num = len(set(tmp_e))
             tmp_table.update_answer(idx,s_num,e_num,w_num)
-        print(a_num)
-        tmp_table.update_question(a_num,w_num+tmp_table.tw_num,e_num+tmp_table.te_num)
         q_list.append(tmp_table)
 
     in_file = open(path,'wb')
@@ -67,6 +71,6 @@ def get_statistic(path,data):
 
 if __name__ == "__main__":
     print("开始处理filterquestion..")
-    #get_statistic(fil_spath,fil_data)
+    get_statistic(fil_spath,fil_data)
     print("开始处理ducquestion..")
     get_statistic(duc_spath,duc_data)
