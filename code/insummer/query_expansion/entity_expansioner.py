@@ -186,7 +186,7 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
         print("句子平均实体数 :%s"%(self.average_sentence_entity()))
         print("命中句子个数 :%s"%(self.hit_sentence(set1)))
         print("同义层过滤后实体个数 :%s"%(self.syn_filter_len))
-        #print("实体重合样本 : %s "%(set1.intersection(set2)))
+        print("实体重合样本 : %s "%(set1.intersection(set2)))
 
         return bias_overlap_ratio(set1,set2),bias_overlap_quantity(set1,set2),len(set1),self.syn_filter_len
 
@@ -246,6 +246,23 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
         return expand_entity
 
 
+    #这个函数的作用是,给定带有weight的基实体, 返回其他的基实体, 是具有如下形式, {expand1:{base1:weight1,base2:weight2}...}
+    def expand_with_entity_weight(self,entity_dict,expand_rule):
+        target_dict = {}
+
+        #对于基实体的每个实体来说
+        for entity in entity_dict:
+            #得到的是一个(邻居,权值)的list
+            neighbour_weight = expand_rule(entity)
+
+            #反向建立一个target的字典里面存储的都是base entity 和weight, 暂定为tuple
+            for neighbour,nweight in neighbour_weight:
+                target_dict.setdefault(neighbour,[])
+                target_dict[neighbour].append( (entity,nweight) )
+
+        return target_dict
+        
+
     #==================下面的是接口方法======================
     #expand的具体方法
     def expand(self):
@@ -280,7 +297,7 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
 
     #定义关联曾的filter的接口
     #entity是单独的一个实体
-    #base_entity 是现有的基实体
+    #base_entity 是现有的基实体 
     @abstractmethod
     def relate_filter(self,base_entity,entity):
         pass
@@ -556,19 +573,13 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
     #entity_dict 是一个带权重的实体集
     def relate_expand(self,entity_dict):
 
-        target_dict = {}
-
-        #对于基实体的每个实体来说
-        for entity in entity_dict:
-            #得到的是一个(邻居,权值)的list
-            neighbour_weight = searcher.relate_entity_weight(entity)
-
-            #反向建立一个target的字典里面存储的都是base entity 和weight, 暂定为tuple
-            for neighbour,nweight in neighbour_weight:
-                target_dict.setdefault(neighbour,[])
-                target_dict[neighbour].append( (entity,nweight) )
-
+        expand_rule = searcher.relate_entity_weight
+        
+        target_dict = self.expand_with_entity_weight(entity_dict,expand_rule)
+        
         result = self.relate_filter(target_dict)
+
+        result = result.union(self.title_entity())
                 
         return result
         
@@ -578,7 +589,7 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
         
         for entity in entity_dict:
             weight_list = entity_dict[entity]
-            if len(weight_list) > 2:
+            if len(weight_list) > 1:
                 result.add(entity)
 
         return result
