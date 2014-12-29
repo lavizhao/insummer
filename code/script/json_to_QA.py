@@ -107,8 +107,8 @@ def extract(infile,outfile,question_format,pass_filter=None,store_file=None):
 #问题过滤函数，将满足：标题实体5-10，答案句子15-20，单词数彪过800的来！
 def question_filter(question):
     T_E_N = 5
-    A_S_N = 15
-    S_W_N = 888
+    A_S_N = 8
+    S_W_N = 1000
 
     #title,each answer in nbest!
     #得到标题

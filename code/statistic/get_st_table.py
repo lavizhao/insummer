@@ -72,5 +72,5 @@ def get_statistic(path,data):
 if __name__ == "__main__":
     print("开始处理filterquestion..")
     get_statistic(fil_spath,fil_data)
-    print("开始处理ducquestion..")
-    get_statistic(duc_spath,duc_data)
+    #print("开始处理ducquestion..")
+    #get_statistic(duc_spath,duc_data)
