@@ -3,6 +3,7 @@
 '''
 说明:这个文件是查询扩展类,主要负责查询扩展方面的工作
 '''
+import math
 import sys
 from abc import ABCMeta, abstractmethod
 from ..common_type import Question
@@ -186,7 +187,7 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
         print("句子平均实体数 :%s"%(self.average_sentence_entity()))
         print("命中句子个数 :%s"%(self.hit_sentence(set1)))
         print("同义层过滤后实体个数 :%s"%(self.syn_filter_len))
-        print("实体重合样本 : %s "%(set1.intersection(set2)))
+        #print("实体重合样本 : %s "%(set1.intersection(set2)))
 
         return bias_overlap_ratio(set1,set2),bias_overlap_quantity(set1,set2),len(set1),self.syn_filter_len
 
@@ -543,7 +544,7 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
     def syn_filter(self,base_entity):
 
         #如果基实体数量小于十个, 那么直接返回
-        if len(base_entity) < 10:
+        if len(base_entity) < 0:
             return base_entity
 
         ranker = Pageranker(base_entity)
@@ -577,21 +578,41 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
         
         target_dict = self.expand_with_entity_weight(entity_dict,expand_rule)
         
-        result = self.relate_filter(target_dict)
+        result = self.relate_filter(target_dict,entity_dict)
 
         result = result.union(self.title_entity())
                 
         return result
         
-    def relate_filter(self,entity_dict):
+    def relate_filter(self,expand_entity,base_entity):
 
-        result = set()
-        
-        for entity in entity_dict:
-            weight_list = entity_dict[entity]
-            if len(weight_list) > 1:
-                result.add(entity)
+        result = {}
+        #对于每一个需要判别的实体来说
+        for entity in expand_entity:
 
+            #得到每个实体和基实体之间的关系
+            base_weight = expand_entity[entity]
+
+            temp = 0
+            for ent,weight in base_weight:
+                temp += base_entity[ent]
+
+            edge_weight = len(base_weight)/(len(base_entity)+1)
+
+            if edge_weight > 0.2 :
+                edge_weight = 1
+            else:
+                edge_weight = edge_weight
+            
+            result[entity] = (temp * ((len(base_weight) +1)**2)  )
+            #result[entity] = (temp * edge_weight  )
+
+        result = sorted(result.items(),key=lambda d:d[1],reverse=True)
+
+        result = result[:8000]
+
+        result = set(dict(result).keys())
+            
         return result
         
     #==============================================================

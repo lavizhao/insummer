@@ -20,7 +20,7 @@ finder = NgramEntityFinder
 #引入数据模块
 import data
 print("载入数据...")
-questions = data.get_data()
+questions = data.get_duc()
 
 
 #定义exp函数, 是实验的主体
@@ -29,12 +29,10 @@ def exp(qnum):
     tratio,tquantity,te,tf = 0,0,0,0
     for i in range(qnum):
         print("问题 %s"%(i))
-        q = questions[0]
+        q = questions[i]
         
-        ose = SynRelateExpansioner(q,finder,level1=2,level2=1,display=True)
+        ose = SynRelateExpansioner(q,finder,level1=1,level2=1,display=True)
         ratio,quantity,expand_entity,filter_len = ose.run()
-
-        q.print()
 
         #命中率
         tratio += ratio
@@ -59,5 +57,5 @@ def exp(qnum):
 if __name__ == '__main__':
     print(__doc__)
 
-    exp(1)
+    exp(45)
 

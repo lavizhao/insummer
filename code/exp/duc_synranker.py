@@ -11,7 +11,7 @@ sys.path.append("..")
 import insummer
 
 #将同义词扩展模块引入
-from insummer.query_expansion.entity_expansioner import SynRelateExpansioner
+from insummer.query_expansion.entity_expansioner import SynPagerankExpansioner,SynHitsExpansioner,SynCCExpansioner,SynKCoreExpansioner
 
 #引入实体发现模块,暂定的是baseline的ngram模块
 from insummer.query_expansion.entity_finder import NgramEntityFinder
@@ -20,7 +20,7 @@ finder = NgramEntityFinder
 #引入数据模块
 import data
 print("载入数据...")
-questions = data.get_data()
+questions = data.get_duc()
 
 
 #定义exp函数, 是实验的主体
@@ -29,12 +29,12 @@ def exp(qnum):
     tratio,tquantity,te,tf = 0,0,0,0
     for i in range(qnum):
         print("问题 %s"%(i))
-        q = questions[0]
-        
-        ose = SynRelateExpansioner(q,finder,level1=2,level2=1,display=True)
+        q = questions[i]
+        ose = SynPagerankExpansioner(q,finder,level1=1,level2=1,display=True,n=30)
+        #ose = SynHitsExpansioner(q,finder,level1=1,level2=1,display=True,n=30)
+        #ose = SynCCExpansioner(q,finder,level1=1,level2=1,display=True)
+        #ose = SynKCoreExpansioner(q,finder,level1=1,level2=1,display=True)
         ratio,quantity,expand_entity,filter_len = ose.run()
-
-        q.print()
 
         #命中率
         tratio += ratio
@@ -59,5 +59,5 @@ def exp(qnum):
 if __name__ == '__main__':
     print(__doc__)
 
-    exp(1)
+    exp(45)
 

@@ -30,7 +30,7 @@ def exp(qnum):
     for i in range(qnum):
         print("问题 %s"%(i))
         q = questions[i]
-        ose = RankRelateFilterExpansioner(q,finder,1,1,display=True)
+        ose = RankRelateFilterExpansioner(q,finder,1,1,display=True,n=80)
         ratio,quantity,expand_entity,filter_len = ose.run()
 
         #命中率

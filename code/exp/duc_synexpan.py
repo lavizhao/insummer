@@ -11,7 +11,7 @@ sys.path.append("..")
 import insummer
 
 #将同义词扩展模块引入
-from insummer.query_expansion.entity_expansioner import SynRelateExpansioner
+from insummer.query_expansion.entity_expansioner import OnlySynExpansioner
 
 #引入实体发现模块,暂定的是baseline的ngram模块
 from insummer.query_expansion.entity_finder import NgramEntityFinder
@@ -20,44 +20,27 @@ finder = NgramEntityFinder
 #引入数据模块
 import data
 print("载入数据...")
-questions = data.get_data()
+questions = data.get_duc()
 
 
 #定义exp函数, 是实验的主体
 #qnum是问题数据的个数
 def exp(qnum):
-    tratio,tquantity,te,tf = 0,0,0,0
+    tratio,tquantity = 0,0
     for i in range(qnum):
         print("问题 %s"%(i))
-        q = questions[0]
-        
-        ose = SynRelateExpansioner(q,finder,level1=2,level2=1,display=True)
-        ratio,quantity,expand_entity,filter_len = ose.run()
-
-        q.print()
-
-        #命中率
+        q = questions[i]
+        ose = OnlySynExpansioner(q,finder,level=1,display=True)
+        ratio,quantity,dumb,shabi = ose.run()
         tratio += ratio
-
-        #命中个数
         tquantity += quantity
-
-        #扩展实体个数
-        te += expand_entity
-
-        #过滤实体个数
-        tf +=  filter_len
-        
-        #ose.print_sentence_entity()
         print(100*"=")
 
     print("平均命中率 : %s"%(tratio/qnum))
     print("平均命中个数 : %s"%(tquantity/qnum))
-    print("平均扩展实体个数: %s"%(te/qnum))
-    print("平均同义层过滤后实体个数: %s"%(tf/qnum))
 
 if __name__ == '__main__':
     print(__doc__)
 
-    exp(1)
+    exp(45)
 

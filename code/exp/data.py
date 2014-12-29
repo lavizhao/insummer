@@ -12,13 +12,19 @@ import pickle
 
 qconf = config("../../conf/question.conf")
 
-data_dir = qconf["filter_qa"]
-
-f = open(data_dir,'rb')
-
-data = pickle.load(f)
-
 def get_data():
+    
+    data_dir = qconf["filter_qa"]
+    f = open(data_dir,'rb')
+    data = pickle.load(f)
+    
+    return data
+
+def get_duc():
+    duc_dir = qconf['duc_question']
+    f = open(duc_dir,'rb')
+    data = pickle.load(f)
+
     return data
 
 

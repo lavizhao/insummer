@@ -134,7 +134,7 @@ class Pageranker(abstract_ranker):
             else:
                 person[ent] = 0.5
 
-        pr = nx.pagerank_numpy(graph,weight='weight',alpha=0.8,personalization=person)
+        pr = nx.pagerank(graph,weight='weight',alpha=0.8,personalization=person,max_iter = 300)
         result = sorted(pr.items(), key=lambda d: d[1],reverse=True)
 
         if return_type == 'set':

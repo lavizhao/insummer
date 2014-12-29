@@ -16,7 +16,7 @@ def test_question(data_path):
     data = pickle.load(f)
     for idx in data:
         print(idx.get_count())
-        #print(idx.get_nbest())
+        print(idx.get_nbest())
 
 if __name__ == "__main__":
     test_question(duc_conf['duc_question'])
