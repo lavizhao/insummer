@@ -29,5 +29,5 @@ def get_duc():
 
 if __name__ == '__main__':
     
-    data = get_duc()
-    print(data[0].get_title())
+    data = get_data()
+    print(data[0].get_nbest()[0])

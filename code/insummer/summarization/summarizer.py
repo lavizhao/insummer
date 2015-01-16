@@ -32,7 +32,6 @@ class abstract_summarizer(metaclass=ABCMeta):
         pass
 
     #总的接口, 外面的主要调用这个跑
-    @abstractmethod
     def run(self):
         #先抽
         result = self.extract()
