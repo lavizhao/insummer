@@ -46,7 +46,8 @@ class Question:
         target = ""
         indx = 0
         for i in self.__nbest:
-            target += "%s,%s\n"%(indx,i.get_content())
+            #target += "%s,%s\n"%(indx,i.get_content())
+            target += "%s "%(i.get_content())
             indx += 1
 
         return target

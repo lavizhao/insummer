@@ -1,6 +1,11 @@
 #!/usr/bin/python3
 #coding=utf-8
 
+'''
+这个主要是将抽取的语料与duc语料的整体统计特征做一个直观的输出比较，
+整体代码糙的不行，全赖问题结构固定，先这么将就着看吧。
+'''
+
 import pickle
 import sys
 
