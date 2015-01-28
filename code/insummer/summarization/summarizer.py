@@ -1,7 +1,7 @@
+#!/usr/bin/python3
 '''
 说明:这里放着的就只是一个摘要的抽象类, 给看接口用的
 '''
-
 from abc import ABCMeta, abstractmethod
 
 #Q是question类
@@ -28,7 +28,7 @@ class abstract_summarizer(metaclass=ABCMeta):
 
     #评价, 用rouge进行评价
     @abstractmethod
-    def eveluation(self,result):
+    def evaluation(self,result):
         pass
 
     #总的接口, 外面的主要调用这个跑
@@ -37,7 +37,7 @@ class abstract_summarizer(metaclass=ABCMeta):
         result = self.extract()
 
         #计算rouge
-        rouge = self.eveluation(result)
+        rouge = self.evaluation(result)
 
         #如果display
         if display :
