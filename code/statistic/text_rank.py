@@ -17,10 +17,14 @@ from insummer.query_expansion.entity_finder import NgramEntityFinder
 
 #获得问题的路径信息
 question_conf = config('../../conf/question.conf')
+
 filter_path = question_conf['filter_qa']
 duc_path = question_conf['duc_question']
 filter_abstract = question_conf['filter_abstract']
 duc_abstract = question_conf['duc_abstract']
+
+#为了ROUGE要将每个topic分开存放到duc/sum_result中
+textrank_path = question_conf['textrank_sum']
 
 nlp = NLP()
 
@@ -47,6 +51,16 @@ def get_abstract(questions,q_path,K):
 
         #对某一答案抽取topK个句子作为摘要，需改成限定词语数量。
         abstract_text = ExtractSentence(answer_text,K)
+
+        #为了ROUGE，存放单个摘要，文件名用topic名D0701A etc.
+        filename = s_question.get_author()
+        if filename[-1] == '/':
+            filename = filename[:-1]
+        sum_path = textrank_path + filename
+        with open(sum_path,'w') as sum_file:
+            sum_file.write(abstract_text)
+            print('abstract for %s is wrote..'%filename)
+        sum_file.close()
 
         #保存并添加到摘要list中，准备扔到pickle里
         tmp_abstract.update_abstract(abstract_text)
@@ -157,5 +171,5 @@ def lDistance(firstString, secondString):
 '''
 
 if __name__ == "__main__":
-    get_abstract(filter_quesiton,filter_abstract,3)
+    #get_abstract(filter_quesiton,filter_abstract,3)
     get_abstract(duc_question,duc_abstract,3)

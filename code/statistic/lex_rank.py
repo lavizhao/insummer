@@ -19,20 +19,19 @@ from insummer.query_expansion.entity_finder import NgramEntityFinder
 #获得问题的路径信息
 question_conf = config('../../conf/question.conf')
 
-filter_path = question_conf['filter_qa']
-#duc_path = question_conf['duc_question']
+#filter_path = question_conf['filter_qa']
+duc_path = question_conf['duc_question']
 
 #摘要保存路径要和textrank区别开，同时为了ROUGE不能简单地用pickle存储了
-#filter_lexab_path = 
-#duc_lexab_path = 
+lexrank_path = question_conf['lexrank_sum']
 
 nlp = NLP()
 
 #获得问题
-filter_file = open(filter_path,'rb')
-filter_question = pickle.load(filter_file)
-#duc_file = open(duc_path,'rb')
-#duc_question = pickle.load(duc_path)
+#filter_file = open(filter_path,'rb')
+#filter_question = pickle.load(filter_file)
+duc_file = open(duc_path,'rb')
+duc_question = pickle.load(duc_file)
 
 '''
     # 建图的时候需要计算这个问题的各个句子的tf idf啊喂
@@ -60,6 +59,16 @@ def lexrank(questions,q_path):
 
         #对某一个答案抽取topK个句子，满足再多一个就超过词限制
         abstract_text = ExtractSentence(answer_text)
+
+        #for rouge save the single summarization.
+        filename = s_question.get_author()
+        if filename[-1] == '/':
+            filename = filename[:-1]
+        sum_path = lexrank_path + filename
+        with open(sum_path,'w') as sum_file:
+            sum_file.write(abstract_text)
+            print('abstract for %s is wrote..'%filename)
+        sum_file.close()
 
         temp_abstract.update_abstract(abstract_text)
         abstract_list.append(temp_abstract)
@@ -183,4 +192,4 @@ def matrix_transform(temp_matrix,word_N):
 
 
 if __name__ == "__main__":
-    lexrank(filter_question,'temp')
+    lexrank(duc_question,'temp')

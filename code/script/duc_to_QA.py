@@ -56,6 +56,7 @@ def get_topic(t_path):
     
     for idx,item in enumerate(topic_str_list):
         #doc_topic_dir:
+        #<num> 里标注的就是topic number！
         topic_dir_num = num_re.findall(item)[0].replace(' ','/')
         #question_title:
         topic_title = title_re.findall(item)[0]
