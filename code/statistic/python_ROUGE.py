@@ -25,20 +25,20 @@ def pythonROUGE(sum_path,ref_path):
         传入到rouge中，进行scoring，然后输出
         这个xml可以直接全部构成，所以传入的还是path+path
     '''
-    xml_path = '/home/charch/gitwork/insummer/duc/textrank.xml'
+    xml_path = '/home/charch/gitwork/insummer/duc/lexrank.xml'
     xml_file = open(xml_path,'w')
     create_xml(xml_file,sum_path,ref_path)
 
     ROUGE_path = '/home/charch/gitwork/insummer/duc/RELEASE-1.5.5/ROUGE-1.5.5.pl'
     data_path = '/home/charch/gitwork/insummer/duc/RELEASE-1.5.5/data'
 
-    options = ' -n 4 -w 1.2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -a -d rougejk.in'
+    options = ' -n 4 -w 1.2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -a '#-d rougejk.in'
     #options = '-a -m -n 2'
 
-    ROUGE_output_path = 'ROUGE_result'
+    ROUGE_output_path = '/home/charch/gitwork/insummer/duc/ROUGE_result'
 
     #exec_command = ROUGE_path + ' -e ' + data_path + ' ' + options + ' -x ' + xml_path + ' > ' + ROUGE_output_path
-    exec_command = ROUGE_path + ' -e ' + data_path + options
+    exec_command = ROUGE_path + ' -e ' + data_path + options + '-x ' + xml_path + ' > ' + ROUGE_output_path
 
     os.system(exec_command)
 
@@ -58,7 +58,7 @@ def create_xml(xml_file,sum_path,ref_path):
 
     xml_file.write('<ROUGE_EVAL version="1.5.5">\n')
 
-    peers_path = '/home/charch/gitwork/insummer/duc/sum_result/textrank_rank'
+    peers_path = '/home/charch/gitwork/insummer/duc/sum_result/lexrank_rank'
     #peers_path = '/home/charch/gitwork/insummer/duc/sum_result/lexrank_rank'
     model_path = '/home/charch/gitwork/insummer/duc/duc_data/models'
 
@@ -100,7 +100,7 @@ def create_xml(xml_file,sum_path,ref_path):
             
 
 if __name__ == "__main__":
-    sum_path = '/home/charch/gitwork/insummer/duc/sum_result/textrank_rank/'
+    sum_path = '/home/charch/gitwork/insummer/duc/sum_result/lexrank_rank/'
     ref_path = '/home/charch/gitwork/insummer/duc/duc_data/models/'
 
     pythonROUGE(sum_path,ref_path)
