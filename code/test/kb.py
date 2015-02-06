@@ -1,10 +1,16 @@
 #!/usr/bin/python3
 
+'''
+测试knowledge_base
+'''
+
 import sys
 sys.path.append("..")
 import insummer
-from insummer.knowledge_base import concept_tool,NaiveAccocSpaceWrapper#init_assoc_space
+
+from insummer.knowledge_base import concept_tool,InsunnetFinder
 from insummer.knowledge_base.relation import relation_tool
+from insummer.knowledge_base.entity_lookup import ConceptnetEntityLookup,InsunnetEntityLookup
 
 import unittest
 
@@ -12,7 +18,26 @@ class test(unittest.TestCase):
     def setUp(self):
         self.cn = concept_tool()
         self.re = relation_tool()
+        self.finder = InsunnetFinder()
+        self.cel = ConceptnetEntityLookup()
+        self.iel = InsunnetEntityLookup()
+        
+    #测试InsunnetFinder
+    def testFinderLookup(self):
+        #随便输一个单词返回结果应不为0
+        cp1 = '/c/en/apple'
+        self.assertEqual(len(self.finder.lookup(cp1))!=0,True)
 
+        cp2 = 'apple'
+        self.assertEqual(len(self.finder.lookup(cp2))!=0,True)
+
+        cp3 = 'lajsljflkj'
+        self.assertEqual(len(self.finder.lookup(cp3))==0,True)
+
+    def testFinderWeight(self):
+        cp1 = '/c/en/apple'
+        cp2 = 'pie'
+        self.assertEqual(self.finder.lookup_weight(cp1,cp2)!=0,True)
 
     #测试concept tool
     def testIsEnglishConcept(self):
@@ -148,19 +173,20 @@ class test(unittest.TestCase):
         rel5 = 'fuck'
         self.assertEqual(self.re.synonym_type(rel5),False)
 
-    '''
-    def testNeigh(self):
-        cp1 = 'car'
-        cp2 = 'fuck'
-        print(self.cn.concept_similarity(cp1,cp2))
-        sb = init_assoc_space()
-        cp1,cp2 = self.cn.add_prefix(cp1),self.cn.add_prefix(cp2)
-        print(sb.sim(cp1,cp2))
-    '''
 
-    def testN(self):
-        cp1 = 'car'
-        
+    #测试 InsunnetEntityLookup
+    def testInsRel(self):
+        cp1 = 'apple'
+        self.assertEqual(len(self.iel.synonym_entity(cp1))!=0,True)
+        self.assertEqual(len(self.iel.relate_entity(cp1))!=0,True)
+
+        cp2 = 'tree'
+        self.assertEqual(len(self.iel.synonym_entity(cp2))!=0,True)
+        self.assertEqual(len(self.iel.relate_entity(cp2))!=0,True)
+
+    
+
+    
         
 if __name__ == '__main__':
     unittest.main()

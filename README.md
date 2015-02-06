@@ -32,16 +32,24 @@ insummer
 **__init__.py**
 
 - `InsunnetFinder` 为在知识库中查找实体(关系或权重)的接口, 相当于封装了SQL
-- `concept_tool` 为实体的常用工具, 例如判断两个实体是不是相等(因为会有需要判断/c/bike 和 bike相等与否的时候)
+- `concept_tool` 为实体的常用工具, 例如判断两个实体是不是相等(因为会有需要判断`/c/bike` 和 `bike`相等与否的时候)
 
 **entity_look.py**
 
 - 查找实体相关的关系, 例如同义关系等
 
-- `abstract\_entity\_lookup` 抽象类, 作为接口使用, ConceptnetEntityLookup和InsunnetEntityLookup分别为在两个知识库查找关系的类.
+- `abstract_entity_lookup` 抽象类, 作为接口使用, `ConceptnetEntityLookup`和`InsunnetEntityLookup`分别为在两个知识库查找关系的类.
 
 **relation.py**
 - 定义关系, 主要作用是封装关系名, 以及判断常用函数等.
+
+###测试代码
+
+| 文件名        | 测试文件名     | 执行命令  |
+| :------------- |:-------------| -----|
+| `knowledge_base` | `test/kb.py` | `./kb.py` |
+
+
 
 
 
