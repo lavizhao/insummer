@@ -409,7 +409,7 @@ class SynPagerankExpansioner(level_filter_entity_expansioner):
 class SynHitsExpansioner(level_filter_entity_expansioner):
 
     #n是同义词过滤实体后的个数
-    def __init__(self,mquestion,entity_finder,level1,level2,display,n=30):
+    def __init__(self,mquestion,entity_finder,level1,level2,display,n=20):
         level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
         self.n = n
 
@@ -534,10 +534,11 @@ class SynKCoreExpansioner(level_filter_entity_expansioner):
 
 #过滤关联层为主        
 class RankRelateFilterExpansioner(SynPagerankExpansioner):
-    def __init__(self,mquestion,entity_finder,level1,level2,display,n=30):
+    def __init__(self,mquestion,entity_finder,level1,level2,display,n=30,length=8000):
         level_filter_entity_expansioner.__init__(self,mquestion,entity_finder,level1,level2,display)
         self.n = n
         self.count = 0
+        self.length = length
 
     #=======================重写部分================================
     #重写同义词过滤的方法
@@ -545,7 +546,7 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
 
         #如果基实体数量小于十个, 那么直接返回
         if len(base_entity) < 0:
-            return base_entity
+            return base_entity #...这里实现的有问题，这里的字典没有加权值
 
         ranker = Pageranker(base_entity)
         result = ranker.rank(return_type='dict')
@@ -609,7 +610,7 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
 
         result = sorted(result.items(),key=lambda d:d[1],reverse=True)
 
-        result = result[:8000]
+        result = result[:self.length]
 
         result = set(dict(result).keys())
             
@@ -618,3 +619,13 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
     #==============================================================
 
     
+    def evaluation(self,expand_terms):
+        set1,set2 = expand_terms,self.get_sentence_total_entity()
+
+        print("问题实体 :%s"%(self.title_entity()))
+        print("问题: %s"%(self.get_title()))
+        print("实体命中数目 : %s"%(bias_overlap_quantity(set1,set2)))
+        print("实体命中率 : %s"%(bias_overlap_ratio(set1,set2)))
+        print("实体重合样本 : %s "%(set1.intersection(set2)))
+
+        return bias_overlap_ratio(set1,set2),bias_overlap_quantity(set1,set2),len(set1),self.syn_filter_len

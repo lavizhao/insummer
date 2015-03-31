@@ -34,6 +34,13 @@ class test(unittest.TestCase):
         cp3 = 'lajsljflkj'
         self.assertEqual(len(self.finder.lookup(cp3))==0,True)
 
+        cp4 = 'band'
+        result = self.finder.lookup(cp4)[:1000]
+        print("band 的搜索结果",len(result))
+        for i in result:
+            print(i)
+
+
     def testFinderWeight(self):
         cp1 = '/c/en/apple'
         cp2 = 'pie'

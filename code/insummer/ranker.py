@@ -75,7 +75,7 @@ class Hitsranker(abstract_ranker):
             graph = self.build_graph()
 
 
-        h,a = nx.hits(graph,max_iter = 300)
+        h,a = nx.hits_numpy(graph)
 
         imp = a
 
