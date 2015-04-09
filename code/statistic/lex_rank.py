@@ -118,9 +118,21 @@ def ExtractSentence(answer_text):
     orders = sorted(cal_lex_rank,key = cal_lex_rank.get,reverse=True)
 
     kth = get_sum_sents(sent_tokens,orders,250)
-    
-    return ' '.join([sent_tokens[orders[ith]] for ith in range(kth)])
 
+    str_tmp_list = []
+    for sidx in range(kth):
+        str_tmp = sent_tokens[orders[sidx]]
+        str_tmp += '[%.4f]'%(cal_lex_rank[sidx])
+        str_tmp_list.append(str_tmp)
+    print_score(str_tmp_list)
+
+    return ' '.join([sent_tokens[orders[ith]] for ith in range(kth)])
+    #for node, pagerankVal in pr.items():
+    #    print("%d,%.4f"%(node,pagerankVal))
+
+def print_score(sen_list):
+    for i in sen_list:
+        print(i)
 
 def get_sum_sents(sents,orders,limit_num):
     "找到不超limit的最多的句子数"

@@ -107,7 +107,19 @@ def ExtractSentence(text,k):
 
     kth = get_sum_sents(sents,250)
     #topK
+
+    str_tmp_list = []
+    for sidx in range(kth):
+        str_tmp = sents[sidx]
+        str_tmp += '[%.4f]'%(cal_gr_page_rank[sents[sidx]])
+        str_tmp_list.append(str_tmp)
+    print_score(str_tmp_list)
+
     return ' '.join(sents[:kth])
+
+def print_score(str_list):
+    for i in str_list:
+        print(i)
 
 def get_sum_sents(sents,limit_num):
     "对于按重要性排序的句子，获得不超过limit_num词数的尽量多的句子"
