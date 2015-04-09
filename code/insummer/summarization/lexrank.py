@@ -16,14 +16,17 @@ from numpy import dot
 from numpy.linalg import norm
 import networkx as nx
 
+data_conf = config('/home/charch/gitwork/insummer/conf/question.conf')
 
 class LexRank(abstract_summarizer):
     '''
     tfidf matrix => graph => pagerank => lexrank scores
     '''
 
-    def __init__(self):
-        abstract_summarizer.__init__(self)
+    def __init__(self,q,words):
+        #abstract_summarizer.__init__(self)
+        self.__question = q
+        self.words_limit = words
 
     #两个抽象方法，extract(self) evaluation(self,result)
 
@@ -41,7 +44,7 @@ class LexRank(abstract_summarizer):
         print('获得句子列表，开始计算tfidf..')
 
         self.N = len(sent_tokens)
-        self.tfidf = TFIDF(sent_tokens)
+        self.tfidf = TFIDF(sent_tokens).matrix
 
         print('获得tfidf矩阵，开始构建图结构..')
 
@@ -68,23 +71,37 @@ class LexRank(abstract_summarizer):
 
         k_th = self.get_sum_sents(sent_tokens,orders)
 
+        str_tmp_list = []
+        for sidx in range(k_th):
+            str_tmp = sent_tokens[orders[sidx]]
+            str_tmp += '[%.4f]'%(cal_lexrank[sidx])
+            str_tmp_list.append(str_tmp)
+        for i in str_tmp_list:
+            print(i)
+
         self.abstrct_text = ' '.join([sent_tokens[orders[ith]] for ith in range(k_th)])
 
         print('摘要完成..')
 
         #之后就是根据question标题，将abstract内容输出到指定位置，然后ROUGE了
-        #待续
+        filename = self.__question.get_author()
+        if filename[-1] == '/':
+            filename = filename[:-1]
+        sum_path = data_conf['lexrank_sum'] + filename
+        with open(sum_path,'w') as sum_file:
+            sum_file.write(self.abstrct_text)
+        sum_file.close()
 
-    def evalutaion(self):
-        '''ROUGE评测'''
+        #因为pyrouge接收的是路径，所以返回路径即可
+        return sum_path
 
-        abstract_output()
+    #def evaluation(self,result):
+    #    '''ROUGE评测'''
+    #    print(result)
 
-        #调用pyrouge
-
-    def abstract_output(self):
+    def abstract_output(self,result):
         '''根据question输出ab'''
-
+        print('successfully.')
         #根据加入的文件名，输出到指定路径
 
 

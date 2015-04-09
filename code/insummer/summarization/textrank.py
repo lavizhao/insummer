@@ -20,8 +20,10 @@ class TextRank(abstract_summarizer):
     '''
 
     #init:已知__question/words_limit
-    def __init__(self):
-        abstract_summarizer.__init__(self)
+    def __init__(self,q,words):
+        #abstract_summarizer.__init__(self)
+        self.__question = q
+        self.words_limit = words
 
     #两个抽象方法，extract(self) evaluation(self,result)
     
@@ -33,12 +35,12 @@ class TextRank(abstract_summarizer):
         #得在question里存放对应的文件名..
         
         title_text = self.__question.get_title()
-        answer_text = self.get_nbest_content()
+        answer_text = self.__question.get_nbest_content()
 
         self.nlp = NLP()
         
         #分句，在textrank中，这也是图结构的nodes
-        sent_tokens = nlp.sent_tokenize(answer_text)
+        sent_tokens = self.nlp.sent_tokenize(answer_text)
 
         #根据文本条件筛选句子，可扩展
         #sent_tokens = filter_sent(sent_tokens,2)
@@ -59,22 +61,40 @@ class TextRank(abstract_summarizer):
 
         k_th = self.get_sum_sents(sents)
 
+        str_tmp_list = []
+        for sidx in range(k_th):
+            str_tmp = sents[sidx]
+            str_tmp += '[%.4f]'%(cal_pagerank[sents[sidx]])
+            str_tmp_list.append(str_tmp)
+        for i in str_tmp_list:
+            print(i)
+
         self.__abstract_text = ' '.join(sents[:k_th])
         
         print('摘要完成..')
 
         #之后就是根据question标题，将abstract内容输出到指定位置，然后rouge了
-        #待续
+        filename = self.__question.get_author()
+        if filename[-1] == '/':
+            filename = filename[:-1]
+        sum_path = data_conf['textrank_sum'] + filename
+        with open(sum_path,'w') as sum_file:
+            sum_file.write(self.abstrct_text)
+        sum_file.close()
 
-    def evalutaion(self):
-        '''ROUGE评测'''
+        #因为pyrouge接收的是路径，所以返回路径即可
+        return sum_path
 
-        abstract_output()
 
-        #调用pyrouge
+
+    #def evaluation(self,result):
+    #    '''ROUGE评测'''
+    #    print(result)
+    #    abstract_output()
 
     def abstract_output(self):
         '''根据question输出ab'''
+        print(True)
 
         #根据加入的文件名，输出到指定路径
 
@@ -121,7 +141,7 @@ class TextRank(abstract_summarizer):
         '''计算两个句子之间的相似度'''
 
         sent_1_tokens = self.nlp.word_tokenize(sent_1)
-        sent_2_tokens = self.nlp.wprd_tokenize(sent_2)
+        sent_2_tokens = self.nlp.word_tokenize(sent_2)
         
         #交集即为共现的词语
         sim_set = set(sent_1_tokens) & set(sent_2_tokens)
