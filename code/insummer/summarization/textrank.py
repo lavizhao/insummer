@@ -14,6 +14,8 @@ from math import log
 import itertools
 import networkx as nx
 
+data_conf = config('/home/lavi/project/insummer/conf/question.conf')
+
 class TextRank(abstract_summarizer):
     '''
     text => sents => graph => pagerank => textrank scores

@@ -41,8 +41,8 @@ if __name__ == "__main__":
     #(options,args) = parser.parse_args()
 
     print('loading the data..')
-    duc_question = pickle.load(open('/home/charch/gitwork/insummer/question_data/duc_question.pkl','rb'))
+    duc_question = pickle.load(open('/home/lavi/project/insummer/question_data/duc_question.pkl','rb'))
 
     #method = options.method
     
-    exp(duc_question,2,'lex')
+    exp(duc_question,4,'lex')

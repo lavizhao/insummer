@@ -79,6 +79,7 @@ if __name__ == '__main__':
     tmaxl = int(options.tmaxl)
     rmaxl = int(options.rmaxl)
         
-    exp(questions,length,tmaxl,rmaxl)
+    #exp(questions,length,tmaxl,rmaxl)
+    exp(questions,4,tmaxl,rmaxl)
         
     print("数据集%s，数据长度%s，同义层最大个数%s,关联层最大个数%s"%(options.data,length,tmaxl,rmaxl))    

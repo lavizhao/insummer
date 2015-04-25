@@ -581,7 +581,7 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
         
         result = self.relate_filter(target_dict,entity_dict)
 
-        result = result.union(self.title_entity())
+        #result = result.union(self.title_entity())
                 
         return result
         
@@ -612,8 +612,10 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
 
         result = result[:self.length]
 
-        result = set(dict(result).keys())
-            
+        total_entity = self.get_sentence_total_entity()
+        
+        #result = set(dict(result).keys())
+
         return result
         
     #==============================================================
@@ -626,6 +628,45 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
         print("问题: %s"%(self.get_title()))
         print("实体命中数目 : %s"%(bias_overlap_quantity(set1,set2)))
         print("实体命中率 : %s"%(bias_overlap_ratio(set1,set2)))
-        print("实体重合样本 : %s "%(set1.intersection(set2)))
+        #print("实体重合样本 : %s "%(set1.intersection(set2)))
+        print("问题句子数",len(self.get_sentence_total_entity()))
+
+        #print("实体重合带权",set2)
+
+
+        count = 0
+        
+        sent_entity = self.get_sentence_entity()
+        for msent,ments in sent_entity:
+            print_a = False
+            for mentity in ments:
+                if mentity in set1:
+                    print_a = True
+                    count += 1
+                    break
+                    
+            if print_a == True:
+                #print(msent,ments)
+                pass
+
+            else :
+                #print("======",msent,ments)
+                pass
+                
+        print("扩展实体个数",len(set1))
+
+        print("过滤后句子个数",count)        
 
         return bias_overlap_ratio(set1,set2),bias_overlap_quantity(set1,set2),len(set1),self.syn_filter_len
+
+
+    #--------重构版-----------
+    def run(self):
+        #抽取答案句子中的所有实体
+        self.construct_sentence_entity()
+
+        #扩展实体
+        expand_terms = self.expand()
+
+        #评价,这个还没有弄
+        return expand_terms

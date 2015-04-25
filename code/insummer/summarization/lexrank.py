@@ -16,7 +16,7 @@ from numpy import dot
 from numpy.linalg import norm
 import networkx as nx
 
-data_conf = config('/home/charch/gitwork/insummer/conf/question.conf')
+data_conf = config('/home/lavi/project/insummer/conf/question.conf')
 
 class LexRank(abstract_summarizer):
     '''
@@ -27,6 +27,7 @@ class LexRank(abstract_summarizer):
         #abstract_summarizer.__init__(self)
         self.__question = q
         self.words_limit = words
+        print(q.get_author())
 
     #两个抽象方法，extract(self) evaluation(self,result)
 
@@ -93,6 +94,7 @@ class LexRank(abstract_summarizer):
         sum_file.close()
 
         #因为pyrouge接收的是路径，所以返回路径即可
+        print(sum_path)
         return sum_path
 
     #def evaluation(self,result):

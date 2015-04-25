@@ -64,3 +64,6 @@ target/
 
 #duc data.
 duc/
+
+as_corpus/
+yahoo_answer/
