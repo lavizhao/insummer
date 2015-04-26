@@ -81,7 +81,7 @@ class dummy1(abstract_summarizer):
 
         f = open(wp,"w")
         f.write(res)
-        f.close
+        f.close()
         
         return wp
 
