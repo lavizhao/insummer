@@ -48,10 +48,10 @@ def sent_len(sent):
 #OCC                                   , 构建出现矩阵OCC[i][j] 为实体I在句子J中出现了没
 class traditional_ilp(abstract_summarizer):
     def __init__(self,q,word_limit=250):
-        self.ep = RFE(q,ngram,1,1,display=False,n=40,length=500)
+        self.ep = RFE(q,ngram,1,1,display=False,n=40,length=4000)
         self.question = q
         self.word_limit = word_limit
-        print("字数限制",self.word_limit)
+        print("文章题目",self.question.get_title())
 
 
     def extract(self):
@@ -178,7 +178,7 @@ class traditional_ilp(abstract_summarizer):
             a2 = mentities_set
 
             #如果没有交集，那么直接扔了
-            if intersec_num <= 1 :
+            if intersec_num <= 3 or sent_len(manswer_sent) < 6 :
                 pass
             else:
                 #先进行判断，句子在不在句子索引中
@@ -244,15 +244,25 @@ class traditional_ilp(abstract_summarizer):
 
         print("建立variable,类别全部设为binary")
         #====> 建立variable,类别全部设为binary
-        x_lpvariable = LpVariable.dicts("entity",x_var,cat=LpBinary)
-        y_lpvariable = LpVariable.dicts("sent",  y_var,cat=LpBinary)
+        x_lpvariable = LpVariable.dicts("entity",x_var,cat=LpInteger,lowBound=0,upBound=10)
+        y_lpvariable = LpVariable.dicts("sent",  y_var,cat=LpInteger,lowBound=0,upBound=1)
 
         #获取ILP变量的权重
         def variable_weight(var):
             #首字母和尾字母
             first,last = var[0],var[1:]
             if first == "y":
-                return 0
+                #得到句子名字
+                variable_name = self.sent_inverse_index[int(last)]
+
+                #得到句子长度
+                sl = sent_len(variable_name)
+
+                #得到句子实体数目
+                #el = len(self.candidate_sentence_entities_dict[variable_name])
+
+                return (sl) * 4
+                #return 0
                 
             elif first == "x":
                 #得到变量实体的名字
@@ -271,7 +281,8 @@ class traditional_ilp(abstract_summarizer):
         print("设立优化目标")
         obj1 = [x_lpvariable[i] * variable_weight(i) for i in x_var ]
         obj2 = [y_lpvariable[i] * variable_weight(i) for i in y_var ]
-        tobj = obj1#.extend(obj2)
+        obj1.extend(obj2)
+        tobj = obj1
         prob += lpSum( tobj )
 
         #定义一个求句子长度的函数
@@ -304,13 +315,14 @@ class traditional_ilp(abstract_summarizer):
 
             nobj.append(-1 * x_lpvariable["x%s"%(i)])
                 
-            prob += lpSum( nobj ) >= 0
+            prob += lpSum( nobj ) == 0
 
 
-        print("Status:", LpStatus[prob.status])
+
         print("开始求解")
         prob.solve()
-
+        print("Status:", LpStatus[prob.status])
+        
         sent_list = []
         for v in prob.variables():
             sp = v.name.split('_')
