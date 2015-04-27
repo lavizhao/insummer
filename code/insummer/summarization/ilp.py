@@ -48,7 +48,7 @@ def sent_len(sent):
 #OCC                                   , 构建出现矩阵OCC[i][j] 为实体I在句子J中出现了没
 class traditional_ilp(abstract_summarizer):
     def __init__(self,q,word_limit=250):
-        self.ep = RFE(q,ngram,1,1,display=False,n=40,length=8000)
+        self.ep = RFE(q,ngram,1,1,display=False,n=100,length=12000)
         self.question = q
         self.word_limit = word_limit
         print("文章题目",self.question.get_title())
@@ -89,9 +89,6 @@ class traditional_ilp(abstract_summarizer):
         answer_total_entities = set(self.ep.get_sentence_total_entity())
         self.answer_total_entities = answer_total_entities
 
-        #=====> 在这里定义一个子函数，方便进行分数转换
-        def transform_score(s):
-            return math.log(s+1)
 
         #记录实体，这里实体总共有两部分，一部分命中的，一部分没有，分别叫hit和unhit好了
         #这里容易产生歧义的是，unhit不是指扩展实体中没有命中的部分，指的是答案实体中没有命中的部分    
@@ -115,10 +112,6 @@ class traditional_ilp(abstract_summarizer):
             #pass
 
         
-        #对所有的命中实体进行分数的转换
-        for mentity in self.hit_entities:
-            mscore = self.hit_entities[mentity]
-            self.hit_entities[mentity] = transform_score(mscore)
 
             
         #====> 找到没有命中的实体
@@ -138,8 +131,19 @@ class traditional_ilp(abstract_summarizer):
                 else:
                     self.hit_entities_freq.setdefault(mentity,0)
                     self.hit_entities_freq[mentity] += 1
-        
 
+        #===========================================================================
+        #=====> 在这里定义一个子函数，方便进行分数转换
+        def transform_score(score,entity):
+            return math.log(score+1) + self.hit_entities_freq[entity] * 5
+                    
+        #对所有的命中实体进行分数的转换
+        for mentity in self.hit_entities:
+            mscore = self.hit_entities[mentity]
+            self.hit_entities[mentity] = transform_score(mscore,mentity)
+
+
+                    
                     
     #整数规划的输入阶段
     #在这个阶段准备整数规划所需要的数据
@@ -178,7 +182,7 @@ class traditional_ilp(abstract_summarizer):
             a2 = mentities_set
 
             #如果没有交集，那么直接扔了
-            if intersec_num <= 4 or sent_len(manswer_sent) < 6 :
+            if intersec_num <= 5 or sent_len(manswer_sent) < 5 :
                 pass
             else:
                 #先进行判断，句子在不在句子索引中
