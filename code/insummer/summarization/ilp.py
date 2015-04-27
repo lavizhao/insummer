@@ -48,7 +48,7 @@ def sent_len(sent):
 #OCC                                   , 构建出现矩阵OCC[i][j] 为实体I在句子J中出现了没
 class traditional_ilp(abstract_summarizer):
     def __init__(self,q,word_limit=250):
-        self.ep = RFE(q,ngram,1,1,display=False,n=40,length=4000)
+        self.ep = RFE(q,ngram,1,1,display=False,n=40,length=8000)
         self.question = q
         self.word_limit = word_limit
         print("文章题目",self.question.get_title())
@@ -178,7 +178,7 @@ class traditional_ilp(abstract_summarizer):
             a2 = mentities_set
 
             #如果没有交集，那么直接扔了
-            if intersec_num <= 3 or sent_len(manswer_sent) < 6 :
+            if intersec_num <= 4 or sent_len(manswer_sent) < 6 :
                 pass
             else:
                 #先进行判断，句子在不在句子索引中
@@ -259,11 +259,10 @@ class traditional_ilp(abstract_summarizer):
                 sl = sent_len(variable_name)
 
                 #得到句子实体数目
-                #el = len(self.candidate_sentence_entities_dict[variable_name])
+                el = len(self.candidate_sentence_entities_dict[variable_name])
 
-                return (sl) * 4
-                #return 0
-                
+                #return (sl) * 4 
+                return 0 
             elif first == "x":
                 #得到变量实体的名字
                 variable_name = self.entity_inverse_index[int(last)]
