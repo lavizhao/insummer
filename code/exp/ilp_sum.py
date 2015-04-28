@@ -21,6 +21,7 @@ def exp(questions,qnum):
     for i in range(qnum):
         print("问题 %s"%(i))
         q = questions[i]
+        q.clean()
         ose = TI(q,250)
 
         result = ose.extract()

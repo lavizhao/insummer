@@ -28,6 +28,10 @@ class Question:
         self.__count = answer_count
         self.type_name = "Question"
 
+    def clean(self):
+        for i in range(len(self.__nbest)):
+            self.__nbest[i].clean()
+        
     def get_author(self):
         return self.__author
 
@@ -98,6 +102,19 @@ class Answer:
         self.__oppose = oppose
         self.__author = author
 
+    def clean(self):
+        sents = nlp.sent_tokenize(self.__content)
+        ans = []
+        for sent in sents:
+            sp = sent.split('--')
+            if len(sp) > 1:
+                s = ' '.join(sp[1:])
+                ans.append(s)
+            else:
+                ans.append(sent)
+
+        self.__content = ' '.join(ans)
+        
     #得到内容,即这个答案
     def get_content(self):
         return self.__content

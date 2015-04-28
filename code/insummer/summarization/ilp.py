@@ -48,7 +48,7 @@ def sent_len(sent):
 #OCC                                   , 构建出现矩阵OCC[i][j] 为实体I在句子J中出现了没
 class traditional_ilp(abstract_summarizer):
     def __init__(self,q,word_limit=250):
-        self.ep = RFE(q,ngram,1,1,display=False,n=100,length=12000)
+        self.ep = RFE(q,ngram,1,1,display=False,n=100,length=16000)
         self.question = q
         self.word_limit = word_limit
         print("文章题目",self.question.get_title())
@@ -67,8 +67,6 @@ class traditional_ilp(abstract_summarizer):
 
         print("过滤前句子大小",len(self.answer_entities_list))
         print("过滤后句子大小",len(self.candidate_sentence_entities_dict))
-        print("句子索引大小",len(self.sent_inverse_index),len(self.sent_index))
-        print("实体索引大小",len(self.entity_inverse_index),len(self.entity_index))
 
         result = self.ilp()
         
@@ -111,8 +109,6 @@ class traditional_ilp(abstract_summarizer):
             #如果不在，直接撇了
             #pass
 
-        
-
             
         #====> 找到没有命中的实体
             
@@ -135,7 +131,9 @@ class traditional_ilp(abstract_summarizer):
         #===========================================================================
         #=====> 在这里定义一个子函数，方便进行分数转换
         def transform_score(score,entity):
-            return math.log(score+1) + self.hit_entities_freq[entity] * 5
+            freq = self.hit_entities_freq[entity]
+            return math.log(score+10) + freq 
+
                     
         #对所有的命中实体进行分数的转换
         for mentity in self.hit_entities:
@@ -211,7 +209,6 @@ class traditional_ilp(abstract_summarizer):
             
         #====> step4：构建OCC矩阵
         self.OCC = [[0 for j in range(len(self.sent_index))]  for i in range(len(self.entity_index))]
-        print("OCC矩阵shape",len(self.OCC),len(self.OCC[0]))
 
         #对于每个 candidate_sentence_entities_dict 中的句子和实体， 下面填充OCC矩阵的工作
         for manswer_sent in self.candidate_sentence_entities_dict:
@@ -265,8 +262,8 @@ class traditional_ilp(abstract_summarizer):
                 #得到句子实体数目
                 el = len(self.candidate_sentence_entities_dict[variable_name])
 
-                #return (sl) * 4 
-                return 0 
+                return sl + el
+                #return 0 
             elif first == "x":
                 #得到变量实体的名字
                 variable_name = self.entity_inverse_index[int(last)]
@@ -339,7 +336,10 @@ class traditional_ilp(abstract_summarizer):
 
         sent_length = 0
         for msent in sent_list:
-            print(msent,self.candidate_sentence_entities_dict[msent])
+            print("句子",msent)
+            print("句子长度",sent_len(msent))
+            print("实体",self.candidate_sentence_entities_dict[msent])
+            print("-"*100)
             sent_length += sent_len(msent)
 
         print("摘要长度",sent_length)
