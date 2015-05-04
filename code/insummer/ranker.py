@@ -130,11 +130,11 @@ class Pageranker(abstract_ranker):
         person = {}            
         for ent in graph.nodes():
             if ent in entity:
-                person[ent] = 1
+                person[ent] = 10
             else:
                 person[ent] = 0.5
 
-        pr = nx.pagerank(graph,weight='weight',alpha=0.8,personalization=person,max_iter = 300)
+        pr = nx.pagerank(graph,weight='weight',alpha=0.8,personalization=person,max_iter = 600)
         result = sorted(pr.items(), key=lambda d: d[1],reverse=True)
 
         if return_type == 'set':

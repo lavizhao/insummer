@@ -132,7 +132,7 @@ class traditional_ilp(abstract_summarizer):
         #=====> 在这里定义一个子函数，方便进行分数转换
         def transform_score(score,entity):
             freq = self.hit_entities_freq[entity]
-            return math.log(score+10) + freq 
+            return math.log(score+10) + freq  
 
                     
         #对所有的命中实体进行分数的转换

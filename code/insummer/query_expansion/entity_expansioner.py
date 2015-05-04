@@ -566,7 +566,9 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
                 topn.append((enti,weig))
 
         topn = dict(topn)
-         
+
+        self.syn_entity_weight = topn
+        
         return topn
 
     
@@ -594,18 +596,20 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
             #得到每个实体和基实体之间的关系
             base_weight = expand_entity[entity]
 
-            temp = 0
+            #conn_with_base 是与基实体联系的强弱
+            conn_with_base = 0
             for ent,weight in base_weight:
-                temp += base_entity[ent]
+                conn_with_base += base_entity[ent] * weight
 
+            #边权重edge_weight 为基实体权重占所有实体的百分比
             edge_weight = len(base_weight)/(len(base_entity)+1)
 
-            if edge_weight > 0.2 :
-                edge_weight = 1
+            if edge_weight > 0.12 :
+                edge_weight = edge_weight * 2
             else:
                 edge_weight = edge_weight
             
-            result[entity] = (temp * ((len(base_weight) +1)**2)  )
+            result[entity] = (conn_with_base) * ( (len(base_weight) + 1)**2 ) 
             #result[entity] = (temp * edge_weight  )
 
         result = sorted(result.items(),key=lambda d:d[1],reverse=True)
