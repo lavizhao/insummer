@@ -48,7 +48,7 @@ def sent_len(sent):
 #OCC                                   , 构建出现矩阵OCC[i][j] 为实体I在句子J中出现了没
 class traditional_ilp(abstract_summarizer):
     def __init__(self,q,word_limit=250):
-        self.ep = RFE(q,ngram,1,1,display=False,n=100,length=16000)
+        self.ep = RFE(q,ngram,1,1,display=False,n=140,length=16000)
         self.question = q
         self.word_limit = word_limit
         print("文章题目",self.question.get_title())
@@ -180,7 +180,7 @@ class traditional_ilp(abstract_summarizer):
             a2 = mentities_set
 
             #如果没有交集，那么直接扔了
-            if intersec_num <= 5 or sent_len(manswer_sent) < 5 :
+            if intersec_num <= 5 or sent_len(manswer_sent) < 7 :
                 pass
             else:
                 #先进行判断，句子在不在句子索引中
