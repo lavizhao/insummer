@@ -99,3 +99,109 @@ class NLP:
 
     def is_stopwords(self,word):
         return word in self.__stopwords
+
+    def sentence_length(self,sent):
+        words = self.word_tokenize(sent)
+        count = 0
+        for word in words:
+            if len(word) >= 2:
+                count += 1
+
+        return count
+
+    def sentence_length_exclude_stop(self,sent):
+        words = self.word_tokenize(sent)
+        count = 0
+        for word in words:
+            if len(word) >= 2 and self.is_stopwords(word)==False:
+                count += 1
+
+        return count
+
+import re
+#句子过滤器
+#这个主要是论文中压缩句子的方法
+#Lu Wang. et al 2013 ACL中给出的七条规则
+#rule1 : 去掉报头，（新闻语料特有），如[MOSCOW,October 19(XINHUA)] - 等
+#rule2 : 去掉相对日期，如星期二
+#rule3 : 去掉句子中间的一些插入语，如XXX, zhaoximo said,XXXX
+#rule4 : 去掉领头的副词、形容词等，如Interesting， XXXX
+#rule5 : 去掉名词的同位语（这个不好做）
+#rule6 : 去掉一些由形容词或动名词等领导的从句，如Starting in 1990....
+#rule7 : 去掉括号内的内容
+class rule_based_sentence_cleaner:
+    def __init__(self):
+        self.nlp = NLP()
+
+    def clean_head(self,sent,head_symbol):
+        if head_symbol in sent:
+            sp = sent.split(head_symbol)
+            sent = ' '.join(sp[1:])
+
+        return sent
+
+    #去掉插入语,如XXX said
+    def clean_intra_sent(self,sent):
+        cand = ["said","saying","says","say"]
+
+        anyone = False
+        for s in cand:
+            if s in sent:
+                anyone = True
+
+        if anyone == False:
+            return sent
+
+        #===============================
+            
+        sp = sent.split(',')
+        ans = []
+
+        for one in sp:
+            one = one.strip()
+            if one[-1] == "." or one[-1] == "?":
+                one = one[:-1]
+
+            dt = False
+            for s in cand:
+                if one.endswith(s) and len(one.split()) <= 5:
+                    dt = True
+                if one.startswith(s) and len(one.split()) <= 5:
+                    dt = True    
+                    
+            if dt == False:
+                ans.append(one)
+
+            
+        res =  ' , '.join(ans)
+
+        if len(res.strip()) == 0:
+            return " "
+                
+        if res[-1] != '.' and res[-1] != '?':
+            res += "."
+        return res
+        
+        
+    def clean(self,sent):
+        #先执行rule1 和rule7
+        sent = sent.replace("``","")
+        sent = sent.replace("\'\'","")
+        
+        #rule7 去掉括号内的内容
+        regex = r"\(.+\)"
+        replacement = " "
+
+        sent = re.sub(regex,replacement,sent)
+        
+        #rule1 去掉-- 和 _ 之前的内容
+        sent = self.clean_head(sent,"--")
+        sent = self.clean_head(sent,"_")
+
+        sent = self.clean_intra_sent(sent)
+
+        return sent
+
+        
+        
+    

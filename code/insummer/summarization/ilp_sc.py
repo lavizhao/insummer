@@ -37,7 +37,7 @@ conf = config('/home/lavi/project/insummer/conf/question.conf')
 #entity_inverse_index                  , 候选实体的逆索引
 
 #OCC                                   , 构建出现矩阵OCC[i][j] 为实体I在句子J中出现了没
-class traditional_ilp(abstract_summarizer):
+class sentence_compression_ilp(abstract_summarizer):
     def __init__(self,q,word_limit=250):
         self.ep = RFE(q,ngram,1,1,display=False,n=140,length=16000)
         self.question = q

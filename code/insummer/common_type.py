@@ -6,8 +6,10 @@
 '''
 
 from .util import NLP
+from .util import rule_based_sentence_cleaner as RBSC
 import sys
 
+rbsc = RBSC()
 nlp = NLP()
 
 #问题类,一个问题通常有
@@ -102,16 +104,15 @@ class Answer:
         self.__oppose = oppose
         self.__author = author
 
+    def clean1(self):
+        pass
+        
     def clean(self):
         sents = nlp.sent_tokenize(self.__content)
         ans = []
         for sent in sents:
-            sp = sent.split('--')
-            if len(sp) > 1:
-                s = ' '.join(sp[1:])
-                ans.append(s)
-            else:
-                ans.append(sent)
+            sent = rbsc.clean(sent)
+            ans.append(sent)
 
         self.__content = ' '.join(ans)
         
