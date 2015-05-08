@@ -123,7 +123,8 @@ class traditional_ilp(abstract_summarizer):
         #=====> 在这里定义一个子函数，方便进行分数转换
         def transform_score(score,entity):
             freq = self.hit_entities_freq[entity]
-            return math.log(score+10) + freq
+            wt = math.log(score+15) + 1.1 * math.log( freq / len(self.answer_entities_list) )
+            return wt
 
                     
         #对所有的命中实体进行分数的转换
@@ -171,7 +172,9 @@ class traditional_ilp(abstract_summarizer):
             a2 = mentities_set
 
             #如果没有交集，那么直接扔了
-            if intersec_num <= 5 or nlp.sentence_length(manswer_sent) < 7 :
+            el = intersec_num
+            sl = nlp.sentence_length(manswer_sent) 
+            if el <= 5 or sl < 7 or sl>50:
                 pass
             else:
                 #先进行判断，句子在不在句子索引中
@@ -253,7 +256,13 @@ class traditional_ilp(abstract_summarizer):
                 #得到句子实体数目
                 el = len(self.candidate_sentence_entities_dict[variable_name])
 
-                return (sl + el)/2
+
+                ew = 0
+                
+                for entity in self.candidate_sentence_entities_dict[variable_name]:
+                    ew += self.hit_entities[entity]
+
+                return (sl + el) + (ew)/2
                 #return 0
                 
             elif first == "x":

@@ -123,7 +123,9 @@ class sentence_compression_ilp(abstract_summarizer):
         #=====> 在这里定义一个子函数，方便进行分数转换
         def transform_score(score,entity):
             freq = self.hit_entities_freq[entity]
-            return math.log(score+10) + freq
+            #return math.log(score+10) + freq
+            wt = math.log(score+15) + 1.1 * math.log( freq / len(self.answer_entities_list) )
+            return wt
 
                     
         #对所有的命中实体进行分数的转换
@@ -171,7 +173,9 @@ class sentence_compression_ilp(abstract_summarizer):
             a2 = mentities_set
 
             #如果没有交集，那么直接扔了
-            if intersec_num <= 5 or nlp.sentence_length(manswer_sent) < 7 :
+            el = intersec_num
+            sl = nlp.sentence_length(manswer_sent) 
+            if el <= 5 or sl < 7 or sl>50:
                 pass
             else:
                 #先进行判断，句子在不在句子索引中
@@ -253,8 +257,14 @@ class sentence_compression_ilp(abstract_summarizer):
                 #得到句子实体数目
                 el = len(self.candidate_sentence_entities_dict[variable_name])
 
-                return (sl + el)/2
-                #return 0
+                ew = 0
+                
+                for entity in self.candidate_sentence_entities_dict[variable_name]:
+                    ew += self.hit_entities[entity]
+
+                #return el
+                msent_score = (sl + el) + (ew)/2
+                return msent_score
                 
             elif first == "x":
                 #得到变量实体的名字
@@ -293,6 +303,7 @@ class sentence_compression_ilp(abstract_summarizer):
         print("句子长度限制")
         #满足长度限制
         prob += lpSum([y_lpvariable[i] * variable_length(i) for i in y_var]) <= self.word_limit
+        prob += lpSum([y_lpvariable[i] * variable_length(i) for i in y_var]) >= 150
 
 
         print("出现次数限制")
@@ -334,9 +345,9 @@ class sentence_compression_ilp(abstract_summarizer):
             print("-"*100)
             sent_length += nlp.sentence_length(msent)
 
-        print("摘要长度",sent_length)
+        print("摘要长度=========>",sent_length)
             
-        print("Total Cost of Ingredients per can = ", value(prob.objective))
+        print("摘要权重和 = ", value(prob.objective))
 
         print("ILP结束")
 

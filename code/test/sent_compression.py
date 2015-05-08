@@ -41,11 +41,11 @@ def main():
 
             for sent in sents:
                 r = rand()
-                if r < 0.2:
+                if r < 0.1:
                     cand_sent.append(sent)
 
-            ans.clean()
-            new_length += nlp.sentence_length(ans.get_content())
+            #ans.clean()
+            #new_length += nlp.sentence_length(ans.get_content())
 
     print("检测句子数量",len(cand_sent))
     print("原来单词数",origin_length)
@@ -53,6 +53,8 @@ def main():
     for sent in cand_sent:
         print("原句子|",sent)
         print("修正过|",rbsc.clean(sent))
+        print("原来tag|",nlp.nltk_tags(sent))
+        print("后来tag|",nlp.nltk_tags(rbsc.clean(sent)))
         print(100*'=')
 
 if __name__ == '__main__':

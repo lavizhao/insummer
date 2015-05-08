@@ -18,6 +18,7 @@ from conceptnet5.language.english import normalize
 ncc = nodes.normalized_concept_name
 from .read_conf import config
 
+
 stopwords = open(config("../../conf/cn_data.conf")["stop_pos"])
 stopwords = stopwords.readlines()
 stopwords = [i.strip() for i in stopwords]
@@ -118,7 +119,7 @@ class NLP:
 
         return count
 
-import re
+import re        
 #句子过滤器
 #这个主要是论文中压缩句子的方法
 #Lu Wang. et al 2013 ACL中给出的七条规则
@@ -129,10 +130,42 @@ import re
 #rule5 : 去掉名词的同位语（这个不好做）
 #rule6 : 去掉一些由形容词或动名词等领导的从句，如Starting in 1990....
 #rule7 : 去掉括号内的内容
+
+from itertools import product
+
 class rule_based_sentence_cleaner:
     def __init__(self):
         self.nlp = NLP()
 
+        relative_date = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday","yesterday","Yesterday","tomorrow","Tomorrow","morning","Morning","afternoon","Afternoon","later","week","month","weeks","months","Week","Month","years","year","Year"]
+
+        pep = ["on","in","from","to","last","one","two","three","four","five","six","seven","eight","nine","ten","hundred","thousand"]
+        
+        stop = ["however","However","Still","still","ago","Ago","But","but","also","now","and"]
+
+        self.reg_relative_date = r""
+
+        pep_rd = []
+
+        for dt,p in product(relative_date,pep):
+            pep_rd.append(p+" "+dt)
+            
+        for dt in relative_date:
+            pep_rd.append(dt)
+
+        for dt in stop:
+            pep_rd.append(dt)
+            
+        reg_temp = '|'.join(pep_rd)
+
+        self.reg_relative_date = "("+reg_temp+")"
+
+        self.clause_prep = ["IN","CC","RB","VBN","VBG"]
+
+        
+
+        
+        
     def clean_head(self,sent,head_symbol):
         if head_symbol in sent:
             sp = sent.split(head_symbol)
@@ -143,6 +176,7 @@ class rule_based_sentence_cleaner:
     #去掉插入语,如XXX said
     def clean_intra_sent(self,sent):
         cand = ["said","saying","says","say"]
+        clause = ["who","which"]
 
         anyone = False
         for s in cand:
@@ -159,6 +193,9 @@ class rule_based_sentence_cleaner:
 
         for one in sp:
             one = one.strip()
+            if len(one) <= 1:
+                continue
+                
             if one[-1] == "." or one[-1] == "?":
                 one = one[:-1]
 
@@ -167,7 +204,11 @@ class rule_based_sentence_cleaner:
                 if one.endswith(s) and len(one.split()) <= 5:
                     dt = True
                 if one.startswith(s) and len(one.split()) <= 5:
-                    dt = True    
+                    dt = True
+
+            for s in clause:
+                if one.startswith(s) :
+                    dt = True
                     
             if dt == False:
                 ans.append(one)
@@ -175,19 +216,59 @@ class rule_based_sentence_cleaner:
             
         res =  ' , '.join(ans)
 
-        if len(res.strip()) == 0:
+        if len(res.split()) <= 2:
             return " "
                 
         if res[-1] != '.' and res[-1] != '?':
             res += "."
         return res
+
+
+    #去掉开始的介词短语、从句或者副词
+    def clean_clause(self,sent):
+        if "," not in sent:
+            return sent
+
+        else:
+            res = ""
+            
+            #进行词性标注
+            pos_tag = self.nlp.nltk_tags(sent)
+
+            if pos_tag[0][1] not in self.clause_prep :
+                return sent
+            else:
+                dot_indx_aft = -5
+                for indx in range(len(pos_tag)):
+                    tag = pos_tag[indx][1]
+                    if tag == ",":
+                        dot_indx_aft = indx + 1
+                        break
+
+                reserve = pos_tag[dot_indx_aft:]
+                res = [i for (i,j) in reserve]
+                return ' '.join(res)
+                        
+            
+
+    #去掉相对日期
+    def clean_date(self,sent):
+        sent = ' '.join(sent.split())
         
-        
+        sent = re.sub(self.reg_relative_date," ",sent)
+
+        return sent
+
     def clean(self,sent):
         #先执行rule1 和rule7
         sent = sent.replace("``","")
         sent = sent.replace("\'\'","")
-        
+
+        if len(sent) < 5:
+            sent = ""
+            return sent
+
+
         #rule7 去掉括号内的内容
         regex = r"\(.+\)"
         replacement = " "
@@ -197,9 +278,43 @@ class rule_based_sentence_cleaner:
         #rule1 去掉-- 和 _ 之前的内容
         sent = self.clean_head(sent,"--")
         sent = self.clean_head(sent,"_")
+        sent = self.clean_head(sent,":")
 
-        sent = self.clean_intra_sent(sent)
+        
+        #rule5 去掉形容词修饰语句
+        #sent = self.clean_clause(sent)
+        
 
+        #rule 去掉插入语和一些从句
+        #sent = self.clean_intra_sent(sent)
+
+        #rule2 去掉相对日期
+        #sent = self.clean_date(sent)
+
+        '''
+        sp = sent.split()
+        res = ""    
+        for i in sp:    
+            if len(i) > 1:
+                res += (i+" ")
+            else:
+                if i != "a" :
+                    pass
+                else:
+                    res += (i+" ")
+
+        sent = res
+        '''
+        sent = sent.strip()
+
+        if len(sent) < 5:
+            sent = ""
+            return sent
+
+
+        if sent[-1] != "." and sent[-1] != "?":
+            sent += "."
+        
         return sent
 
         

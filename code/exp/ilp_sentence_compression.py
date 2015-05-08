@@ -12,12 +12,12 @@ import data
 import logging
 from optparse import OptionParser 
 
-from insummer.summarization.ilp import sentence_compression_ilp as TI
+from insummer.summarization.ilp_sc import sentence_compression_ilp as TI
 
 #定义exp函数, 是实验的主体
 #qnum是问题数据的个数
 def exp(questions,qnum):
-    tratio,tquantity,te,tf = 0,0,0,0
+
     for i in range(qnum):
         print("问题 %s"%(i))
         q = questions[i]
