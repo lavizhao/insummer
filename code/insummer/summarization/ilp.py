@@ -47,17 +47,19 @@ class traditional_ilp(abstract_summarizer):
 
     def extract(self):
         #执行生成摘要前的预备工作
-        print("进行生成摘要前的准备工作")
+        print("step 1 : 进行生成摘要前的准备工作")
         self.init_step()
 
-        print("命中实体数目",len(self.hit_entities_freq),len(self.hit_entities)) 
+        print("命中实体数目",len(self.hit_entities_freq))
         print("答案实体总数",len(self.answer_total_entities))
 
-        print("进行整数规划前的准备工作")
+        print("step 2 : 进行整数规划前的准备工作")
         self.ilp_prepare()
 
         print("过滤前句子大小",len(self.answer_entities_list))
         print("过滤后句子大小",len(self.candidate_sentence_entities_dict))
+
+        print("step 3 : 进行整数规划")
 
         result = self.ilp()
         
@@ -86,6 +88,7 @@ class traditional_ilp(abstract_summarizer):
 
         #记录命中实体的频率
         self.hit_entities_freq = {}
+        self.unhit_entities_freq = {}
 
         #====> 找到命中实体
         #对于所有这些扩展的实体
@@ -113,6 +116,9 @@ class traditional_ilp(abstract_summarizer):
             for mentity in mentities:
                 if mentity not in self.hit_entities:
                     self.unhit_entities[mentity] = -1.0
+                    
+                    self.unhit_entities_freq.setdefault(mentity,0)
+                    self.unhit_entities_freq[mentity] += 1
 
                 #对于是hit_entities的实体
                 else:
@@ -132,7 +138,11 @@ class traditional_ilp(abstract_summarizer):
             mscore = self.hit_entities[mentity]
             self.hit_entities[mentity] = transform_score(mscore,mentity)
 
-
+        for mentity in self.unhit_entities:
+            freq = self.unhit_entities_freq[mentity]
+            if freq >= 4:
+                mscore = math.log(15+freq) + 1.1 * math.log(freq / len(self.answer_entities_list))
+                self.hit_entities[mentity] = mscore
                     
                     
     #整数规划的输入阶段
@@ -174,7 +184,7 @@ class traditional_ilp(abstract_summarizer):
             #如果没有交集，那么直接扔了
             el = intersec_num
             sl = nlp.sentence_length(manswer_sent) 
-            if el <= 5 or sl < 7 or sl>50:
+            if el <= 6 or sl < 7 or sl>50:
                 pass
             else:
                 #先进行判断，句子在不在句子索引中
@@ -220,10 +230,11 @@ class traditional_ilp(abstract_summarizer):
                 #现在实体  (i=menetity_index )  ,  (j=msent_index)
                 self.OCC[mentity_index][msent_index] = 1
 
+        print("OCC矩阵维度",len(self.OCC),len(self.OCC[0]))
         print("OCC矩阵构建完成")
 
     def ilp(self):
-        print("ILP开始")    
+        print("=== ILP开始 ===")    
         #====> 定义问题
         prob = LpProblem("ILP for summarization problem",LpMaximize)
 
@@ -237,7 +248,7 @@ class traditional_ilp(abstract_summarizer):
         for indx in self.sent_inverse_index:
             y_var.append("y%s"%(indx))
 
-        print("建立variable,类别全部设为binary")
+        print("=== 建立variable,类别全部设为binary ===")
         #====> 建立variable,类别全部设为binary
         x_lpvariable = LpVariable.dicts("entity",x_var,cat=LpInteger,lowBound=0,upBound=10)
         y_lpvariable = LpVariable.dicts("sent",  y_var,cat=LpInteger,lowBound=0,upBound=1)
@@ -262,8 +273,8 @@ class traditional_ilp(abstract_summarizer):
                 for entity in self.candidate_sentence_entities_dict[variable_name]:
                     ew += self.hit_entities[entity]
 
-                return (sl + el) + (ew)/2
-                #return 0
+                #return (sl + el) + ew/2
+                return (el*2) + ew/2
                 
             elif first == "x":
                 #得到变量实体的名字
@@ -279,7 +290,7 @@ class traditional_ilp(abstract_summarizer):
                 sys.exit(1)
                 
 
-        print("设立优化目标")
+        print("=== 设立优化目标 ===")
         obj1 = [x_lpvariable[i] * variable_weight(i) for i in x_var ]
         obj2 = [y_lpvariable[i] * variable_weight(i) for i in y_var ]
         obj1.extend(obj2)
@@ -299,12 +310,13 @@ class traditional_ilp(abstract_summarizer):
                 print("变量有问题")
                 sys.exit(1)
 
-        print("句子长度限制")
+        print("=== 加上句子长度限制 ===")
         #满足长度限制
         prob += lpSum([y_lpvariable[i] * variable_length(i) for i in y_var]) <= self.word_limit
+        prob += lpSum([y_lpvariable[i] * variable_length(i) for i in y_var]) >= self.word_limit
 
 
-        print("出现次数限制")
+        print("=== 加上出现次数限制 ===")
         #满足出现次数限制
         #对每个实体而言
         for i in range(len(self.entity_index)):
@@ -320,7 +332,7 @@ class traditional_ilp(abstract_summarizer):
 
 
 
-        print("开始求解")
+        print("=== 开始求解 ===")
         prob.solve()
         print("Status:", LpStatus[prob.status])
         
@@ -339,13 +351,20 @@ class traditional_ilp(abstract_summarizer):
         for msent in sent_list:
             print("句子",msent)
             print("句子长度",nlp.sentence_length(msent))
-            print("实体",self.candidate_sentence_entities_dict[msent])
+
+            ent_str = ""
+            
+            for entity in self.candidate_sentence_entities_dict[msent]:
+                ent_str += "(%s:%s) "%(entity,self.hit_entities[entity])
+                
+            print("实体",ent_str)
+                  
             print("-"*100)
             sent_length += nlp.sentence_length(msent)
 
-        print("摘要长度",sent_length)
+        print("摘要长度===>",sent_length)
             
-        print("Total Cost of Ingredients per can = ", value(prob.objective))
+        print("权重和 = ", value(prob.objective))
 
         print("ILP结束")
 
