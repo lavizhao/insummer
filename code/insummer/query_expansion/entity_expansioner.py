@@ -103,6 +103,8 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
     def title_entity(self):
         title = self.get_title()
 
+        remove = {"discuss","describe","specify","explain","identify","include","involve","note"}
+
         #基实体集初始化
         base_entity = set()
 
@@ -114,6 +116,8 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
             if len(entity) > 0:
                 base_entity = base_entity.union(set(entity))
 
+
+        base_entity = base_entity.difference(remove)
         return base_entity
 
     def print_sentence_entity(self):

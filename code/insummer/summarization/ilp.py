@@ -43,7 +43,7 @@ class traditional_ilp(abstract_summarizer):
         self.question = q
         self.word_limit = word_limit
         print("文章题目",self.question.get_title())
-
+        
 
     def extract(self):
         #执行生成摘要前的预备工作
@@ -184,7 +184,7 @@ class traditional_ilp(abstract_summarizer):
             #如果没有交集，那么直接扔了
             el = intersec_num
             sl = nlp.sentence_length(manswer_sent) 
-            if el <= 6 or sl < 7 or sl>50:
+            if el <= 6 or sl < 8 or sl>50:
                 pass
             else:
                 #先进行判断，句子在不在句子索引中
@@ -209,7 +209,6 @@ class traditional_ilp(abstract_summarizer):
             self.entity_inverse_index[entity_index_number] = mentity
             entity_index_number += 1
 
-        
             
         #====> step4：构建OCC矩阵
         self.OCC = [[0 for j in range(len(self.sent_index))]  for i in range(len(self.entity_index))]
@@ -233,6 +232,8 @@ class traditional_ilp(abstract_summarizer):
         print("OCC矩阵维度",len(self.OCC),len(self.OCC[0]))
         print("OCC矩阵构建完成")
 
+
+        
     def ilp(self):
         print("=== ILP开始 ===")    
         #====> 定义问题
@@ -253,6 +254,11 @@ class traditional_ilp(abstract_summarizer):
         x_lpvariable = LpVariable.dicts("entity",x_var,cat=LpInteger,lowBound=0,upBound=10)
         y_lpvariable = LpVariable.dicts("sent",  y_var,cat=LpInteger,lowBound=0,upBound=1)
 
+        #====>取得问题的实体
+        title_entity = self.ep.title_entity()
+        print("问题实体",title_entity)
+
+        
         #获取ILP变量的权重
         def variable_weight(var):
             #首字母和尾字母
@@ -264,9 +270,14 @@ class traditional_ilp(abstract_summarizer):
                 #得到句子长度
                 sl = nlp.sentence_length_exclude_stop(variable_name)
 
+                sent_entity = self.candidate_sentence_entities_dict[variable_name]
+                
                 #得到句子实体数目
-                el = len(self.candidate_sentence_entities_dict[variable_name])
+                el = len(sent_entity)
 
+                #句子和标题都有的实体
+                intersect_sent_title = sent_entity.intersection(title_entity)
+                il = len(intersect_sent_title)
 
                 ew = 0
                 
@@ -274,7 +285,8 @@ class traditional_ilp(abstract_summarizer):
                     ew += self.hit_entities[entity]
 
                 #return (sl + el) + ew/2
-                return (el*2) + ew/2
+                return ((el*2) + ew/2) 
+                #return (el + el) +  ew/2 - (sl-15)/3 + il
                 
             elif first == "x":
                 #得到变量实体的名字
