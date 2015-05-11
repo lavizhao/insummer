@@ -39,7 +39,7 @@ conf = config('/home/lavi/project/insummer/conf/question.conf')
 #OCC                                   , 构建出现矩阵OCC[i][j] 为实体I在句子J中出现了没
 class traditional_ilp(abstract_summarizer):
     def __init__(self,q,word_limit=250):
-        self.ep = RFE(q,ngram,1,1,display=False,n=140,length=16000)
+        self.ep = RFE(q,ngram,1,1,display=False,n=140,length=1600000)
         self.question = q
         self.word_limit = word_limit
         print("文章题目",self.question.get_title())
@@ -184,7 +184,7 @@ class traditional_ilp(abstract_summarizer):
             #如果没有交集，那么直接扔了
             el = intersec_num
             sl = nlp.sentence_length(manswer_sent) 
-            if el <= 6 or sl < 8 or sl>50:
+            if el <= 6 or sl < 8 or sl>50 :
                 pass
             else:
                 #先进行判断，句子在不在句子索引中
@@ -268,9 +268,12 @@ class traditional_ilp(abstract_summarizer):
                 variable_name = self.sent_inverse_index[int(last)]
 
                 #得到句子长度
-                sl = nlp.sentence_length_exclude_stop(variable_name)
+                sl = nlp.sentence_length(variable_name)
 
                 sent_entity = self.candidate_sentence_entities_dict[variable_name]
+
+                sl_without_stop = nlp.sentence_length_exclude_stop(variable_name)
+
                 
                 #得到句子实体数目
                 el = len(sent_entity)
@@ -280,12 +283,15 @@ class traditional_ilp(abstract_summarizer):
                 il = len(intersect_sent_title)
 
                 ew = 0
+                el_pos = 0
                 
                 for entity in self.candidate_sentence_entities_dict[variable_name]:
-                    ew += self.hit_entities[entity]
+                    mentity_weight = self.hit_entities[entity]
+                    ew += mentity_weight
+
 
                 #return (sl + el) + ew/2
-                return ((el*2) + ew/2) 
+                return ((el + el) + ew/2) 
                 #return (el + el) +  ew/2 - (sl-15)/3 + il
                 
             elif first == "x":
