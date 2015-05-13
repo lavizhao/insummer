@@ -67,6 +67,8 @@ class abstract_summarizer(metaclass=ABCMeta):
         options = ' -n 4 -w 1.2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -a '
 
         exec_command = data_conf['ROUGE_PATH'] + ' -e ' + data_conf['rouge_data_path'] + options + ' -x ' + data_conf['xml_path'] + ' > ' + score_path
+
+        print(exec_command)
         os.system(exec_command)
 
     #总的接口, 外面的主要调用这个跑

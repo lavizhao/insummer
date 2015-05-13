@@ -89,10 +89,6 @@ class NgramEntityFinder(abstract_entity_finder):
         #第一步stem所有句子, 这里有将/替换成空格,这个比较有必要
         sent = self.get_sentence().replace('/',' ')
         sent = self.get_sentence().replace('-',' ')
-        stem_sent = nlp.norm_text(sent)
-
-        #第二步,word tokenize
-        tok_sent = nlp.word_tokenize(stem_sent)
 
         #先POS-tagging
         pos_sent = nlp.blob_tags(sent)
