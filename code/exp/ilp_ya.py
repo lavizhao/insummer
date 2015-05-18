@@ -12,6 +12,9 @@ import logging
 from optparse import OptionParser 
 
 from insummer.summarization.ilp import sparse_ilp as SI
+from insummer.summarization.dummy_summarizer import ya_dum as YA
+from insummer.summarization.textrank import SPTextRank as TR
+from insummer.summarization.lexrank import SPLexRank as LR
 from insummer.common_type import Question,Answer
 
 as_dir = "/home/lavi/project/insummer/as_corpus/all/"
@@ -77,28 +80,46 @@ def build_questions():
         
     return questions
 
-def exp(questions,qnum):
+    
+def exp(questions,qnum,method):
     for i in range(qnum):
         print("问题 %s"%(i))
         q = questions[i]
         q.clean()
-        ose = SI(q,100)
+        if method == "sip":
+            ose = SI(q,100)
+        elif method == "dum":
+            ose = YA(q,100)
+        elif method == "tr":
+            ose = TR(q,100)
+        elif method == "lr":
+            ose = LR(q,100)
+            
+        else:
+            print("没有选定指定方法")
+            sys.exit(1)
 
         result = ose.extract()
         print("写文件地址",result)
         ose.evaluation(result,"silp")
         print(100*"=")
-    
+
+
+from optparse import OptionParser         
 if __name__ == '__main__':
     print(__doc__)
     questions = build_questions()
 
-    exp(questions,len(questions))
+
+    parser = OptionParser()  
+    parser.add_option("-m", "--method", dest="method",help="方法")
+
+    (options, args) = parser.parse_args()
+
+    exp(questions,len(questions),options.method)
     #exp(questions,45)
 
     print("问题总数",len(all_fnames))
-
-    
 
     
 

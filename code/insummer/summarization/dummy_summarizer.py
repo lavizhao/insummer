@@ -3,7 +3,7 @@
 说明：这个是最简单的摘要方法，主要用来进行测试抽取句子的效果
 '''
 
-from .summarizer import abstract_summarizer
+from .summarizer import abstract_summarizer,ya_summarizer
 from ..query_expansion.entity_expansioner import RankRelateFilterExpansioner as RFE
 from ..query_expansion.entity_finder import NgramEntityFinder as ngram
 from ..read_conf import config
@@ -194,5 +194,28 @@ class dummy2(abstract_summarizer):
         
         return wp
         
-                
-    
+as_dir = "/home/lavi/project/insummer/as_corpus/all/"
+as_data = "/home/lavi/project/insummer/as_corpus/as_data/"
+as_sum = "/home/lavi/project/insummer/as_corpus/as_sum/"
+as_res = "/home/lavi/project/insummer/as_corpus/as_res/"
+as_best = "/home/lavi/project/insummer/as_corpus/all_best/"
+class ya_dum(ya_summarizer):
+    def __init__(self,Q,words,display=False):
+        ya_summarizer.__init__(self,Q,words,display=display)
+
+    def extract(self):
+        #先得到名字
+        wp = self.question.get_author()
+        doc_num = wp.split("|")[0]
+
+        best_name = as_best+doc_num + ".txt"
+        total = open(best_name).readlines()
+        total = ' '.join(total)
+
+        fname = as_res+wp.split("|")[0]+".res"
+
+        f = open(fname,"w")
+        f.write(total)
+        f.close()
+        return fname
+        
