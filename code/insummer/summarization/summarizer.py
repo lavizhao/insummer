@@ -93,7 +93,6 @@ class duc_summarizer(abstract_summarizer):
 
         exec_command = data_conf['ROUGE_PATH'] + ' -e ' + data_conf['rouge_data_path'] + options + ' -x ' + data_conf['xml_path'] + ' > ' + score_path
 
-        print(exec_command)
         os.system(exec_command)
 
     #总的接口, 外面的主要调用这个跑
@@ -173,6 +172,5 @@ class ya_summarizer(abstract_summarizer):
         
         exec_command = data_conf['ROUGE_PATH'] + ' -e ' + data_conf['rouge_data_path'] + options + ' -x ' + data_conf['xml_path'] + ' > ' + score_path
 
-        print(exec_command)
         os.system(exec_command)
 

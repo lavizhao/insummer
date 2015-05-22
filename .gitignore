@@ -67,3 +67,8 @@ duc/
 
 as_corpus/
 yahoo_answer/
+
+*.zip
+code/statistic/freq.csv
+code/script/cal_r.py
+question_retrival/

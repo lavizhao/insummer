@@ -606,12 +606,14 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
                 conn_with_base += base_entity[ent] * weight
 
             #边权重edge_weight 为基实体权重占所有实体的百分比
+            '''    
             edge_weight = len(base_weight)/(len(base_entity)+1)
 
             if edge_weight > 0.12 :
                 edge_weight = edge_weight * 2
             else:
                 edge_weight = edge_weight
+            '''
             
             result[entity] = (conn_with_base) * ( (len(base_weight) + 1)**2 ) 
             #result[entity] = (temp * edge_weight  )

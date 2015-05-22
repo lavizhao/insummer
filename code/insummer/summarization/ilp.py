@@ -128,9 +128,14 @@ class traditional_ilp(duc_summarizer):
 
         #===========================================================================
         #=====> 在这里定义一个子函数，方便进行分数转换
+
+        beta  = 15
+        alpha = 1.1
+        
         def transform_score(score,entity):
             freq = self.hit_entities_freq[entity]
-            wt = math.log(score+15) + 1.1 * math.log( freq / len(self.answer_entities_list) )
+            wt = math.log(score + beta) + alpha *  math.log( freq / len(self.answer_entities_list) )
+            #print("%s , %s , %s , %s , %s"%(wt,score,freq,math.log(score+beta),math.log( freq / len(self.answer_entities_list) )  )  )
             return wt
 
                     
@@ -142,7 +147,7 @@ class traditional_ilp(duc_summarizer):
         for mentity in self.unhit_entities:
             freq = self.unhit_entities_freq[mentity]
             if freq >= 4:
-                mscore = math.log(15+freq) + 1.1 * math.log(freq / len(self.answer_entities_list))
+                mscore = math.log(freq + beta) + alpha *  math.log(freq / len(self.answer_entities_list))
                 self.hit_entities[mentity] = mscore
                     
                     
@@ -291,9 +296,7 @@ class traditional_ilp(duc_summarizer):
                     ew += mentity_weight
 
 
-                #return (sl + el) + ew/2
-                return ((el + el) + ew/2) 
-                #return (el + el) +  ew/2 - (sl-15)/3 + il
+                return ((el + el) + ew/2)
                 
             elif first == "x":
                 #得到变量实体的名字
@@ -520,9 +523,11 @@ class sparse_ilp(ya_summarizer):
 
         #===========================================================================
         #=====> 在这里定义一个子函数，方便进行分数转换
+        alpha = 0.8
+        beta = 15
         def transform_score(score,entity):
             freq = self.hit_entities_freq[entity]
-            wt = math.log(score+15) + 0.8 * math.log( freq / len(self.answer_entities_list) )
+            wt = math.log(score+beta) + alpha * math.log( freq / len(self.answer_entities_list) )
             return wt
 
                     
@@ -534,7 +539,7 @@ class sparse_ilp(ya_summarizer):
         for mentity in self.unhit_entities:
             freq = self.unhit_entities_freq[mentity]
             if freq >= 2:
-                mscore = math.log(15+freq) + 0.8 * math.log(freq / len(self.answer_entities_list))
+                mscore = math.log(freq+beta) + alpha * math.log(freq / len(self.answer_entities_list))
                 self.hit_entities[mentity] = mscore
                     
                     
