@@ -143,3 +143,13 @@ class NaiveQuestion(Question):
 
     def set_entity(self,entity):
         self.__entity = entity
+
+
+def build_question(title,content,best,nbest):
+    ans = []
+    for nb in nbest:
+        one_ans = Answer(nb)
+        ans.append(one_ans)
+
+    mq = Question(title=title,content=content,best=best,nbest=ans)
+    return mq

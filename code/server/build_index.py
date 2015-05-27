@@ -147,16 +147,16 @@ from whoosh.qparser import QueryParser
 
 def write_indx():
     index_dir = "/home/lavi/project/insummer/index"
-    schema = Schema(title=TEXT(stored=True),content=STORED,best=STORED,nbest=STORED)
+    schema = Schema(qid=ID(stored=True),title=TEXT(stored=True),content=STORED,best=STORED,nbest=STORED)
     ix = create_in(index_dir, schema)
     writer = ix.writer()
 
     count = 0
     for tq in gen_manner() :
         nbest_js = json.dumps(tq.nbest)
-        writer.add_document(title=tq.title,content=tq.content,best=tq.best,nbest=nbest_js)
+        writer.add_document(qid=str(count),title=tq.title,content=tq.content,best=tq.best,nbest=nbest_js)
         count += 1
-        if count % 1000 == 0:
+        if count % 10000 == 0:
             print(count/1000,"K")
 
     writer.commit()

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>问题{{ qtitle }}</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="{{ url_for('static', filename='bootstrap-theme.min.css') }}" rel="stylesheet">
+    
+    <!-- Custom styles for this template -->
+    <link href="{{ url_for('static', filename='qsearch.css') }}" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="http://cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="http://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  
+<form method="POST" action="/" >
+  {{ form.hidden_tag() }}
+  {{ form.name.label }} {{ form.name(size=50,class='search-field') }}
+  <input type="submit" value="搜索" class = "btn btn-primary btn-lg">
+</form>
+
+
+
+<body>
+<div class="page-header">
+  <h1>问题 </h1>
+  <h1>{{ qtitle }}</h1>
+</div>
+
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h2 class="panel-title"><p>问题描述</p></h2>
+  </div>
+  <div class="panel-body">
+    <p>{{ content }}</p>
+  </div>
+</div>
+
+<div class="panel panel-success">
+  <div class="panel-heading">
+    <h2 class="panel-title"><p>最佳答案</p></h2>
+  </div>
+  <div class="panel-body">
+    <p>{{ best }}</p>
+  </div>
+</div>
+
+<div class="panel panel-primary">
+  <div class="panel-heading">
+    <h2 class="panel-title"><p>自动摘要</p></h2>
+  </div>
+  <div class="panel-body">
+    <p>{{ summarization }}</p>
+  </div>
+</div>
+
+<h2>检索结果</h2>
+
+{{result|safe}}
+
+
+
+</html>
