@@ -3,7 +3,7 @@
 '''
 
 import pymongo
-from ..util import NLP
+from ..util import NLP,mem_cache
 from ..read_conf import config
 from conceptnet5.query import lookup
 from conceptnet5.query import field_match
@@ -31,10 +31,12 @@ class InsunnetFinder:
         conn = pymongo.Connection('localhost',27017)
         self.__db = conn.insunnet
         self.tbl = self.__db.assertion
+        self.lookup_mc = mem_cache("lookup")
 
     def lookup(self,entity):
+
         entity = cp_tool.concept_name(entity)
-        
+
         result1 = list(self.tbl.find({'start':entity}))
         result2 = list(self.tbl.find({'end':entity}))
         
@@ -42,22 +44,25 @@ class InsunnetFinder:
 
         return result1
 
+        
     def lookup_weight(self,ent1,ent2):
+
         ent1 = cp_tool.concept_name(ent1)
         ent2 = cp_tool.concept_name(ent2)
 
         result1 = list(self.tbl.find({'start':ent1,'end':ent2}))
         result2 = list(self.tbl.find({'start':ent2,'end':ent1}))
-
+        
         result = 0
 
-        if len(result1) == 0 and len(result2) == 0:
+        if len(result1)==0 and len(result2)==0:
             return 0
         elif len(result1) != 0:
-            return float(result1[0]['weight'])
+            res = float(result1[0]['weight'])
+            return res
         else:
-            return float(result2[0]['weight'])
-
+            res1 = float(result2[0]['weight'])
+            return res1
 
 #定义与概念相关的常用函数集
 #这里要考虑两种情况conceptnet默认的是带/c 的, 而我自己写的不带

@@ -317,6 +317,25 @@ class rule_based_sentence_cleaner:
         
         return sent
 
-        
-        
-    
+#传说中的内存存储
+class mem_cache:
+    def __init__(self,name):
+        self.data = {}
+        self.hit = 0
+        self.total = 0
+        self.name = name
+
+    def add(self,key,value):
+        self.data[key] = value
+
+    def has(self,key,display = False):
+        self.total += 1    
+        if key in self.data:
+            self.hit += 1
+            if display:
+                if self.hit % 100 == 0:
+                    print("cache名",self.name,"命中率",self.hit/self.total,"总个数",self.total,"命中个数",self.hit)
+            return self.data[key]
+
+        return None
+

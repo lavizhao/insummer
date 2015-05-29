@@ -12,6 +12,9 @@ import itertools
 from operator import itemgetter
 import matplotlib.pyplot as plt
 
+import time
+clock = time.time
+
 cn = concept_tool()
 
 def get_weight1(ent1,ent2):
@@ -106,7 +109,6 @@ class Pageranker(abstract_ranker):
             if weight > 0:
                 gr.add_edge(ent1,ent2,weight=weight)
 
-
         #去掉0初度的点, 防止pagerank报错
         W = nx.DiGraph(gr)    
         degree = W.out_degree(weight='weight')
@@ -117,11 +119,19 @@ class Pageranker(abstract_ranker):
                 except:
                     pass
 
-                
         return self.set_graph(gr)
 
+    def rank1(self,return_type='set'):
+        entity = self.get_entity()
+
+        result = [(ent,10) for ent in entity]
+
+        return result
+
+        
     def rank(self,return_type='set'):
-        #排除一些异常情况    
+        #排除一些异常情况
+
         graph = self.get_graph()
         if graph==None:
             graph = self.build_graph()
@@ -133,6 +143,7 @@ class Pageranker(abstract_ranker):
                 person[ent] = 10
             else:
                 person[ent] = 0.5
+
 
         pr = nx.pagerank(graph,weight='weight',alpha=0.8,personalization=person,max_iter = 600)
         result = sorted(pr.items(), key=lambda d: d[1],reverse=True)

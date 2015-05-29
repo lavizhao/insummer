@@ -11,21 +11,18 @@ from ..util import NLP
 from .entity_finder import NgramEntityFinder
 from ..knowledge_base.entity_lookup import ConceptnetEntityLookup,InsunnetEntityLookup
 from ..knowledge_base import concept_tool
-from ..evaluation import bias_overlap_ratio,bias_overlap_quantity
 
 from ..ranker import Pageranker,Hitsranker,CCRanker,KCoreRanker
 
 nlp = NLP()
-searcher = InsunnetEntityLookup()#ConceptnetEntityLookup()
+searcher = InsunnetEntityLookup()
 
 import networkx as nx
 import itertools
 from operator import itemgetter
-import matplotlib.pyplot as plt
 
 import time
 clock = time.time
-import multiprocessing as mp
 
 #定义抽象类
 #这个类是实体扩展的类,主要功能是
@@ -52,24 +49,30 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
 
         self.display = display
 
+    #返回问题题目
     def get_title(self):
         return self.__question.get_title()
-        
+
+    #返回整个问题
     def get_question(self):
         return self.__question
 
+    #返回答案
     def get_answers(self):
         return self.__question.get_nbest()
 
+    #给句子实体对增加句子实体对
     def append_sentence_entity(self,se_pair):
         self.__sentence_entity.append(se_pair)
 
+    #得到实体的答案全部实体
     def get_sentence_total_entity(self):
         return self.__sentence_total_entity
 
+    #得到句子实体
     def get_sentence_entity(self):
         return self.__sentence_entity    
-        
+
     #构建sentence entity
     def construct_sentence_entity(self):
         #先把所有answer取出来
@@ -81,18 +84,18 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
             #得到答案的内容
             content = answer.get_content()
 
-            #sentence tokenize
             sentences = nlp.sent_tokenize(content)
 
             #对于每一个句子
             for sentence in sentences:
 
+                #实体链接
                 finder = NgramEntityFinder(sentence)
 
                 #找出所有实体
                 entity = finder.extract_entity(display=False)
 
-                #把总实体相加
+                #跟总实体取并
                 self.__sentence_total_entity = self.__sentence_total_entity.union(set(entity))
 
                 #加入结果集中
@@ -103,6 +106,7 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
     def title_entity(self):
         title = self.get_title()
 
+        #去掉多余实体,这些实体明显具有讨论的意味，认为是没有表义性质的
         remove = {"discuss","describe","specify","explain","identify","include","involve","note"}
 
         #基实体集初始化
@@ -124,17 +128,6 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
         for sentence,entity in self.__sentence_entity:
             print("%s\n%s\n%s"%(sentence,entity,100*"="))
             
-    #各个句子的平均实体数目
-    def average_sentence_entity(self):
-        #句子数目
-        sentence_num = len(self.__sentence_entity)
-
-        entity_num = 0
-        for sentence,entity in self.__sentence_entity:
-            entity_num += len(entity)
-
-        return entity_num/sentence_num
-        
     #主体调用的函数
     #先把句子中所有的实体都抽出来
     #再进行实体扩展, 然后进行评价
@@ -145,14 +138,6 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
         #扩展实体
         expand_terms = self.expand()
 
-        #评价,这个还没有弄
-        return self.evaluation(expand_terms)
-
-
-    @abstractmethod
-    def evaluation(self):
-        pass
-        
     #抽象方法, title扩展类, 用于扩展实体, 每个类必须定义该方法
     #也就是算法的精华部分, 最后会输出扩展的实体
     @abstractmethod
@@ -160,10 +145,9 @@ class abstract_entity_expansioner(metaclass=ABCMeta):
         pass
 
         
-#这个是最一开始的思路
-#问题中有A,B,C三个实体, 那么找到和A,B,C三个都有关联的实体,并且不过滤,然后去答案中找
-#这个方法的缺点是,选择的实体过多, 没有说服力
-#按照层过滤的方式
+#现阶段的层次过滤方式，这个是可以继承的，非常好用
+#level1 是同义层层数
+#level2 是关联层层数
 class level_filter_entity_expansioner(abstract_entity_expansioner):
     def __init__(self,mquestion,entity_finder,level1,level2,display):
         abstract_entity_expansioner.__init__(self,mquestion,entity_finder,display)
@@ -176,39 +160,6 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
     def get_level(self):
         return self.level1,self.level2
         
-    #评价实体扩充的好坏, 这个方法因为不唯一, 所以也有可能扩充到好几个方法
-    #expand terms是一个set
-    #另一个现有的数据是self.__sentence_entity, 因为可以直接访问到, 所以不会另建一个
-    def evaluation(self,expand_terms):
-        set1,set2 = expand_terms,self.get_sentence_total_entity()
-
-        print("问题实体 :%s"%(self.title_entity()))
-        print("扩展实体个数: %s"%(len(set1)))
-        print("实体命中数目 : %s"%(bias_overlap_quantity(set1,set2)))
-        print("实体命中率 : %s"%(bias_overlap_ratio(set1,set2)))
-        print("答案实体总数目 : %s"%(len(set2)))
-        print("句子数目 : %s"%(len(self.get_sentence_entity())))
-        print("句子平均实体数 :%s"%(self.average_sentence_entity()))
-        print("命中句子个数 :%s"%(self.hit_sentence(set1)))
-        print("同义层过滤后实体个数 :%s"%(self.syn_filter_len))
-        #print("实体重合样本 : %s "%(set1.intersection(set2)))
-
-        return bias_overlap_ratio(set1,set2),bias_overlap_quantity(set1,set2),len(set1),self.syn_filter_len
-
-
-    #命中句子个数
-    def hit_sentence(self,expand_terms):
-        result = 0
-        for sentence,entities in self.get_sentence_entity():
-            hit = 0
-            for entity in entities:
-                if entity in expand_terms:
-                    hit += 1
-            if hit >= 2:
-                result += 1
-        return result        
-        
-        
     #这个是扩展的通用方法, 给定输入的base_entity集合, 利用某种扩展规则进行扩展, 还有扩展层数
     #返回扩展的实体    
     def expand_with_entity_type(self,base_entity,expand_rule,expand_level):
@@ -218,8 +169,6 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
         
         #1. 记录当前的实体数量
         previous_entity_length = len(base_entity)
-        #if self.display:
-        #    print("句子实体 : %s"%(base_entity))
 
         #2. expand_entity初始化设为base_entity
         expand_entity = base_entity.copy()
@@ -285,6 +234,7 @@ class level_filter_entity_expansioner(abstract_entity_expansioner):
         #step4: 关联层扩展
         relate_entity = self.relate_expand(syn_entity)
 
+        
         return relate_entity
         
     def syn_expand(self,base_entity):
@@ -554,7 +504,7 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
 
         ranker = Pageranker(base_entity)
         result = ranker.rank(return_type='dict')
-
+        
         important_entity = result
         #先求最小索引
         l = min(len(important_entity),self.n)
@@ -572,7 +522,7 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
         topn = dict(topn)
 
         self.syn_entity_weight = topn
-        
+
         return topn
 
     
@@ -605,18 +555,9 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
             for ent,weight in base_weight:
                 conn_with_base += base_entity[ent] * weight
 
-            #边权重edge_weight 为基实体权重占所有实体的百分比
-            '''    
-            edge_weight = len(base_weight)/(len(base_entity)+1)
-
-            if edge_weight > 0.12 :
-                edge_weight = edge_weight * 2
-            else:
-                edge_weight = edge_weight
-            '''
             
             result[entity] = (conn_with_base) * ( (len(base_weight) + 1)**2 ) 
-            #result[entity] = (temp * edge_weight  )
+
 
         result = sorted(result.items(),key=lambda d:d[1],reverse=True)
 
@@ -624,52 +565,9 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
 
         total_entity = self.get_sentence_total_entity()
         
-        #result = set(dict(result).keys())
-
         return result
         
-    #==============================================================
-
     
-    def evaluation(self,expand_terms):
-        set1,set2 = expand_terms,self.get_sentence_total_entity()
-
-        print("问题实体 :%s"%(self.title_entity()))
-        print("问题: %s"%(self.get_title()))
-        print("实体命中数目 : %s"%(bias_overlap_quantity(set1,set2)))
-        print("实体命中率 : %s"%(bias_overlap_ratio(set1,set2)))
-        #print("实体重合样本 : %s "%(set1.intersection(set2)))
-        print("问题句子数",len(self.get_sentence_total_entity()))
-
-        #print("实体重合带权",set2)
-
-
-        count = 0
-        
-        sent_entity = self.get_sentence_entity()
-        for msent,ments in sent_entity:
-            print_a = False
-            for mentity in ments:
-                if mentity in set1:
-                    print_a = True
-                    count += 1
-                    break
-                    
-            if print_a == True:
-                #print(msent,ments)
-                pass
-
-            else :
-                #print("======",msent,ments)
-                pass
-                
-        print("扩展实体个数",len(set1))
-
-        print("过滤后句子个数",count)        
-
-        return bias_overlap_ratio(set1,set2),bias_overlap_quantity(set1,set2),len(set1),self.syn_filter_len
-
-
     #--------重构版-----------
     def run(self):
         #抽取答案句子中的所有实体
