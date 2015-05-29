@@ -10,7 +10,6 @@
 #find通用方法, 查找到所有的实体, 返回一个entity string 类的list, 这样做的好处是, 用entity string 进行封装, 使得里面的比如get sick这样的词组可以进行二次查询, 扩大搜索范围
 
 from abc import ABCMeta, abstractmethod
-from conceptnet5.language.english import normalize
 from ..util import NLP
 from ..knowledge_base import concept_tool
 
@@ -58,18 +57,6 @@ class abstract_entity_finder(metaclass=ABCMeta):
             print(100*"=")
         return result
         
-class example_entity_finder(abstract_entity_finder):
-
-    def __init__(self,question):
-        abstract_entity_finder.__init__(self,question)
-
-    def print(self):
-        print(self.get_sentence().get_title())
-
-    def find(self,display=False):
-        print(display)
-
-
 def stopwords_filter(word):
     if nlp.is_stopwords(word):
         return False

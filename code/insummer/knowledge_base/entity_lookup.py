@@ -5,8 +5,6 @@
 
 import pymongo
 
-from conceptnet5.query import AssertionFinder as Finder
-
 from .import InsunnetFinder
 
 from . import concept_tool
@@ -16,7 +14,6 @@ from .relation import relation_tool
 rel_tool = relation_tool()
 
 from abc import ABCMeta, abstractmethod
-
 
 class abstract_entity_lookup(metaclass=ABCMeta):
     def __init__(self):
@@ -44,66 +41,10 @@ def common_limit(cp1,cp2,rel,cp):
     else:
         return False
     
-#这个是利用conceptnet进行查找的类, 这个速度肯定不会快
-class ConceptnetEntityLookup(abstract_entity_lookup):
-
-    def __init__(self):
-        abstract_entity_lookup.__init__(self)
-        self.cn_finder = Finder()
-
-
-    def lookup_entity_with_reltype(self,entity,reltype,other_limit=None):
-
-        #先加个前缀
-        entity = cn_tool.add_prefix(entity)
-
-        result = []
-        
-        #对于能查到的每个结构关系
-        for edge in self.cn_finder.lookup(entity):
-            #获得三元组
-            start,end,rel = edge['start'],edge['end'],edge['rel']
-
-            #如果实体==end,则neighbour=start, 反之=end
-            #这个实体相等是可以自动去前后缀的
-            neighbour = start if cn_tool.entity_equal(end,entity) else end
-
-            #如果满足某个条件
-            if reltype(rel) :
-                if other_limit != None :
-                    if other_limit(start,end,rel,entity):
-                        result.append(neighbour)
-                        #print("start %30s || rel %20s ||end %30s"%(cn_tool.concept_name(start),rel,cn_tool.concept_name(end)))    
-                else:
-                    result.append(neighbour)
-
-        #重新去一遍前后缀
-        result = self.remove_prefix_suffix(result)                    
-        return result
-
-    def remove_prefix_suffix(self,entity_list):
-        result = set()
-        for i in entity_list:
-            result.add(cn_tool.concept_name(i))
-
-        return result
-        
-    def synonym_entity(self,entity):
-        result = self.lookup_entity_with_reltype(entity,rel_tool.synonym_type,common_limit)
-
-        return result
-
-    #关联关系
-    def relate_entity(self,entity):
-        result = self.lookup_entity_with_reltype(entity,rel_tool.relate_type,common_limit)
-        return result
-
-
 
 def insun_limit(cp1,cp2,rel,cp):
     return True
         
-#这个是利用conceptnet进行查找的类, 这个速度肯定不会快
 class InsunnetEntityLookup(abstract_entity_lookup):
 
     def __init__(self):

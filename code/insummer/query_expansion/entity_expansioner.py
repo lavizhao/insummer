@@ -9,7 +9,7 @@ from abc import ABCMeta, abstractmethod
 from ..common_type import Question
 from ..util import NLP
 from .entity_finder import NgramEntityFinder
-from ..knowledge_base.entity_lookup import ConceptnetEntityLookup,InsunnetEntityLookup
+from ..knowledge_base.entity_lookup import InsunnetEntityLookup
 from ..knowledge_base import concept_tool
 
 from ..ranker import Pageranker,Hitsranker,CCRanker,KCoreRanker
