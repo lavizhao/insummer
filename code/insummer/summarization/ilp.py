@@ -3,7 +3,7 @@
 这个文件的主要作用是记录所有ILP的方法， 如果记不下就另来一个文件
 '''
 
-from .summarizer import abstract_summarizer,duc_summarizer,ya_summarizer
+from .summarizer import abstract_summarizer
 from ..query_expansion.entity_expansioner import RankRelateFilterExpansioner as RFE
 from ..query_expansion.entity_finder import NgramEntityFinder as ngram
 from ..query_expansion.entity_finder import MoreNgramEntityFinder as mngram
@@ -38,8 +38,9 @@ conf = config('/home/lavi/project/insummer/conf/question.conf')
 #entity_inverse_index                  , 候选实体的逆索引
 
 #OCC                                   , 构建出现矩阵OCC[i][j] 为实体I在句子J中出现了没
-class traditional_ilp(duc_summarizer):
+class traditional_ilp(abstract_summarizer):
     def __init__(self,q,word_limit=250):
+        abstract_summarizer.__init__(self,q,word_limit)
         self.ep = RFE(q,ngram,1,1,display=False,n=140,length=1600000)
         self.question = q
         self.word_limit = word_limit
@@ -395,7 +396,7 @@ class traditional_ilp(duc_summarizer):
 
 #OCC                                   , 构建出现矩阵OCC[i][j] 为实体I在句子J中出现了没
 as_res = "/home/lavi/project/insummer/as_corpus/as_res/"
-class sparse_ilp(ya_summarizer):
+class sparse_ilp(abstract_summarizer):
     def __init__(self,q,word_limit=250):
 
         self.question = q

@@ -7,6 +7,10 @@ yahoo answer 摘要
 import sys
 sys.path.append("..")
 import insummer
+from insummer.read_conf import config
+
+
+data_conf = config('../../conf/question.conf')
 
 import logging
 from optparse import OptionParser 
@@ -28,6 +32,56 @@ for fname in os.listdir(as_dir):
     num = fname[:-4]
     all_fnames.append(num)
 
+def evaluation(result,flags,q):
+
+    xml_file = open(data_conf['xml_path'],'w')
+
+    author = q.get_author()
+    fname = author.split("|")[0]
+
+    #step1 xml开头
+    xml_file.write('<ROUGE_EVAL version="1.5.5">\n')
+
+    #step2 eval id => 这个写文件名，例如1.txt => 里面含有标准的摘要
+    xml_file.write('<EVAL ID="' + fname + '">\n')
+
+    #这个是我自己写的
+    xml_file.write('<PEER-ROOT>\n')
+    xml_file.write(as_res + '\n')
+    xml_file.write('</PEER-ROOT>\n')
+
+
+    #模型的，就是标准数据集
+    xml_file.write('<MODEL-ROOT>\n')
+    xml_file.write(as_sum + '\n')
+    xml_file.write('</MODEL-ROOT>\n')
+
+    #写文件的格式
+    xml_file.write('<INPUT-FORMAT TYPE="SPL">\n')
+    xml_file.write('</INPUT-FORMAT>\n')
+
+    #这个是我自己的文件名
+    sum_name = fname+".res"
+    xml_file.write('<PEERS>\n')
+    xml_file.write('<P ID="01">' + sum_name + '</P>\n')
+    xml_file.write('</PEERS>\n')
+    
+    #这个是模型的
+    xml_file.write('<MODELS>\n')
+    xml_file.write("<M ID=\"A\">%s.sum</M>\n"%(fname))
+    xml_file.write('</MODELS>\n')
+
+    xml_file.write('</EVAL>')
+    xml_file.write('</ROUGE_EVAL>')
+    xml_file.close()
+
+    options = ' -n 4 -w 1.2 -m -2 4 -u -c 95 -r 1000 -f A -p 0.5 -t 0 -a '
+        
+    score_path = data_conf['ROUGE_SCORE']+fname+"silp"
+        
+    exec_command = data_conf['ROUGE_PATH'] + ' -e ' + data_conf['rouge_data_path'] + options + ' -x ' + data_conf['xml_path'] + ' > ' + score_path
+
+    os.system(exec_command)
 
 import re,sys
 #建立问句和答案的类
@@ -101,7 +155,7 @@ def exp(questions,qnum,method):
 
         result = ose.extract()
         print("写文件地址",result)
-        ose.evaluation(result,"silp")
+        evaluation(result,"silp",ose.get_question())
         print(100*"=")
 
 
