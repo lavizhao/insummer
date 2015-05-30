@@ -31,6 +31,18 @@ for fname in os.listdir(as_dir):
     num = fname[:-4]
     all_fnames.append(num)
 
+
+def write_tofile(question,sent_list):
+    wp = question.get_author()
+    fname = as_res+wp.split("|")[0]+".res"
+    f = open(fname,"w")
+    for msent in sent_list:
+        f.write(msent+" ")
+
+    f.close()
+    return fname  
+    
+    
 def evaluation(result,flags,q):
 
     xml_file = open(data_conf['xml_path'],'w')
@@ -156,9 +168,9 @@ def exp(questions,qnum,method):
             print("没有选定指定方法")
             sys.exit(1)
         '''
-        result = ose.extract()
-        print("写文件地址",result)
-        evaluation(result,"silp",ose.get_question())
+        slist = ose.extract()
+        wp = write_tofile(ose.get_question(),slist)
+        evaluation(wp,"silp",ose.get_question())
         print(100*"=")
 
 

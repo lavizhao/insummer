@@ -115,6 +115,8 @@ def dis_question(qid):
     di = DI(tquestion,100)
 
     summarization = di.extract()
+
+    summarization = ''.join(summarization)
     
     return render_template('qdis.html',qtitle=res["title"],best=res["best"],form=form3,result=ans_content,content=res["content"],summarization=summarization)
 

@@ -18,6 +18,20 @@ from optparse import OptionParser
 from insummer.summarization.ilp import traditional_ilp as TI
 data_conf = config('../../conf/question.conf')
 
+def write_tofile(question,sent_list):
+    
+    wp = data_conf["ilp_sum"]
+    wp += question.get_author()
+    wp = wp[:-1]
+
+    f = open(wp,"w")
+    for msent in sent_list:
+        f.write(msent+" ")
+
+    f.close()
+    return wp    
+
+
 def evaluation(result,flags):
 
     xml_file = open(data_conf['xml_path'],'w')
@@ -67,10 +81,11 @@ def exp(questions,qnum):
         q.clean()
         ose = TI(q,250)
 
-        result = ose.extract()
+        slist = ose.extract()
 
-        print(result)
-        evaluation(result,'ilp')
+        wp = write_tofile(ose.get_question(),slist)
+
+        evaluation(wp,'ilp')
         print(100*"=")
 
 if __name__ == '__main__':
