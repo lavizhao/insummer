@@ -16,9 +16,8 @@ import logging
 from optparse import OptionParser 
 
 from insummer.summarization.ilp import sparse_ilp as SI
-from insummer.summarization.dummy_summarizer import ya_dum as YA
-from insummer.summarization.textrank import SPTextRank as TR
-from insummer.summarization.lexrank import SPLexRank as LR
+#from insummer.summarization.textrank import SPTextRank as TR
+#from insummer.summarization.lexrank import SPLexRank as LR
 from insummer.common_type import Question,Answer
 
 as_dir = "/home/lavi/project/insummer/as_corpus/all/"
@@ -142,6 +141,10 @@ def exp(questions,qnum,method):
         q.clean()
         if method == "sip":
             ose = SI(q,100)
+        else:
+            pass
+
+        '''
         elif method == "dum":
             ose = YA(q,100)
         elif method == "tr":
@@ -152,7 +155,7 @@ def exp(questions,qnum,method):
         else:
             print("没有选定指定方法")
             sys.exit(1)
-
+        '''
         result = ose.extract()
         print("写文件地址",result)
         evaluation(result,"silp",ose.get_question())
