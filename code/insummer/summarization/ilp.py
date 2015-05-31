@@ -255,6 +255,7 @@ class abstract_ilp(abstract_summarizer):
 
                 sent_entity = self.candidate_sentence_entities_dict[variable_name]
 
+                ef = 0
                 ew = 0
                 #得到句子实体数目
                 el = len(sent_entity)
@@ -262,8 +263,9 @@ class abstract_ilp(abstract_summarizer):
                 for entity in self.candidate_sentence_entities_dict[variable_name]:
                     mentity_weight = self.hit_entities[entity]
                     ew += mentity_weight
-
-                return ((el + el) + ew/2)
+                    ef += self.hit_entities_freq.get(entity,0)
+                    
+                return ((el + el) + ew/2 )
                 
             elif first == "x":
                 #得到变量实体的名字
@@ -344,7 +346,7 @@ class abstract_ilp(abstract_summarizer):
 
 class traditional_ilp(abstract_ilp):
     def __init__(self,q,word_limit=250):
-        self.ep = RFE(q,ngram,1,1,display=False,n=140,length=1600000)
+        self.ep = RFE(q,ngram,1,1,display=False,n=1000,length=1600000)
         self.question = q
         abstract_ilp.__init__(self,q,word_limit,ngram,alpha=1.1,beta=15,unseen_limit=4,min_el=6,min_sl=8,max_sl=50)
         

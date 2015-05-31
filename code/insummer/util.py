@@ -66,7 +66,11 @@ class NLP:
 
     def bigrams(self,sent_tok):
         return nltk.bigrams(sent_tok)
+        
+    def trigrams(self,sent_tok):
+        return nltk.bigrams(sent_tok)
 
+        
     #判断pos是不是名词,即以N或n开头
     def tag_is_noun(self,tag):
         if tag.startswith('N'):

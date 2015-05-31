@@ -50,16 +50,16 @@ class InsunnetFinder:
         result1 = list(self.tbl.find({'start':ent1,'end':ent2}))
         result2 = list(self.tbl.find({'start':ent2,'end':ent1}))
         
+        
         result = 0
+        for edge in result1:
+            result += edge['weight']
 
-        if len(result1)==0 and len(result2)==0:
-            return 0
-        elif len(result1) != 0:
-            res = float(result1[0]['weight'])
-            return res
-        else:
-            res1 = float(result2[0]['weight'])
-            return res1
+        for edge in result2:
+            result += edge['weight']
+
+        return result
+
 
 #定义与概念相关的常用函数集
 #这里要考虑两种情况conceptnet默认的是带/c 的, 而我自己写的不带

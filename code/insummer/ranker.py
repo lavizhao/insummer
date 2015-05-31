@@ -56,7 +56,7 @@ class abstract_ranker(metaclass=ABCMeta):
 
         for ent1,ent2 in node_pairs:
             weight = get_weight2(ent1,ent2)
-            if weight > 0:
+            if weight > 0.3 and ent1 != ent2:
                 gr.add_edge(ent1,ent2,weight=weight)
 
         return self.set_graph(gr)

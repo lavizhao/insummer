@@ -555,7 +555,7 @@ class RankRelateFilterExpansioner(SynPagerankExpansioner):
             for ent,weight in base_weight:
                 conn_with_base += base_entity[ent] * weight
 
-            
+
             result[entity] = (conn_with_base) * ( (len(base_weight) + 1)**2 ) 
 
 

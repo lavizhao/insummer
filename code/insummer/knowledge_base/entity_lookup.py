@@ -76,12 +76,10 @@ class InsunnetEntityLookup(abstract_entity_lookup):
                 if other_limit != None :
                     if other_limit(start,end,rel,entity):
                         result.append(neighbour)
-                        #print("start %30s || rel %20s ||end %30s"%(cn_tool.concept_name(start),rel,cn_tool.concept_name(end)))    
                 else:
                     result.append(neighbour)
 
         #重新去一遍前后缀
-        #result = self.remove_prefix_suffix(result)                    
         return result
 
     #查找实体的特定关系的实体和权重, 注意, 这个真函数的不返回权重
