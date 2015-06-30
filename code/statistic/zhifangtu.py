@@ -23,32 +23,22 @@ for line in f:
         lfreq.append(sp[4])
 '''
 fig1 = plt.figure(1)
-plt.hist(wt,range=(-5,8),bins=150)
-plt.xlabel('value range')
-plt.ylabel('freq')
+plt.hist(wt,range=(-5,4),bins=40,log=True)
+plt.xlabel('mixed score')
+plt.ylabel('frequency')
 '''
 '''
 fig2 = plt.figure(2)
-plt.hist(score,range=(0,50),bins=150)
-plt.xlabel('value range')
-plt.ylabel('freq')
+plt.hist(score,range=(0,50),bins=40,log=True)
+plt.xlabel('expanded score')
+plt.ylabel('frequency')
 '''
-'''
+
 fig2 = plt.figure(2)
-plt.hist(freq,range=(0,150),bins=150)
-plt.xlabel('value range')
-plt.ylabel('freq')
-'''
-'''
-fig2 = plt.figure(2)
-plt.hist(lscore,range=(0,15),bins=150)
-plt.xlabel('value range')
-plt.ylabel('freq')
-'''
-fig2 = plt.figure(2)
-plt.hist(lfreq,range=(-5,0),bins=150)
-plt.xlabel('value range')
-plt.ylabel('freq')
+plt.hist(freq,range=(0,60),bins=40,log=True)
+plt.xlabel('concept frequency')
+plt.ylabel('frequency')
+
 
 
 

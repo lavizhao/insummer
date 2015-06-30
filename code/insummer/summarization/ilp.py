@@ -255,7 +255,6 @@ class abstract_ilp(abstract_summarizer):
 
                 sent_entity = self.candidate_sentence_entities_dict[variable_name]
 
-                ef = 0
                 ew = 0
                 #得到句子实体数目
                 el = len(sent_entity)
@@ -263,7 +262,6 @@ class abstract_ilp(abstract_summarizer):
                 for entity in self.candidate_sentence_entities_dict[variable_name]:
                     mentity_weight = self.hit_entities[entity]
                     ew += mentity_weight
-                    ef += self.hit_entities_freq.get(entity,0)
                     
                 return ((el + el) + ew/2 )
                 
